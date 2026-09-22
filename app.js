@@ -326,6 +326,8 @@ function renderInventario() {
     const ent = entradaDe(p.id);
     const q = quedaDe(p.id);
     const mer = mermaDe(p.id);
+    const mv = movimientosDe(p.id);
+    const nMovs = mv.entradas + mv.mermas;
     const sob = S.sobrante.filter((x) => x.productoId === p.id).reduce((a, x) => a + x.cantidad, 0);
     const detalleMerma = mer > 0 ? ` · merma ${cant(mer, p)}`
       : mer < 0 ? ` · sobró ${cant(-mer, p)}` : '';
@@ -334,7 +336,9 @@ function renderInventario() {
       `<div class="iv-main"><div class="iv-nom"></div>` +
       `<div class="iv-sub">${precioLabel(p)}${S.turno ? ' · entró ' + cant(ent, p) : ''}` +
       (!S.turno && sob ? ` · quedó ${cant(sob, p)}` : '') +
-      `<span class="sub-merma">${detalleMerma}</span></div></div>` +
+      `<span class="sub-merma">${detalleMerma}</span></div>` +
+      (nMovs ? `<button class="btn-link iv-movs" data-movs>Entradas y mermas (${nMovs})</button>` : '') +
+      `</div>` +
       (S.turno
         ? `<div class="iv-num"><b class="${q < 0 ? 'negativo' : ''}">${cant(q, p)}</b><small>quedan</small></div>`
         : '') +
@@ -347,6 +351,8 @@ function renderInventario() {
     if (bEnt) bEnt.onclick = () => abrirEntrada(p);
     const bMer = li.querySelector('[data-merma]');
     if (bMer) bMer.onclick = () => abrirMerma(p);
+    const bMovs = li.querySelector('[data-movs]');
+    if (bMovs) bMovs.onclick = () => abrirMovs(p);
     li.querySelector('[data-edit]').onclick = () => abrirProducto(p);
     ul.appendChild(li);
   }
@@ -920,6 +926,70 @@ $('#formEntrada').addEventListener('submit', (e) => {
   toast('Entrada sumada');
 });
 
+/* ---------------- modal: entradas y mermas de un producto ---------------- */
+/* Una entrada mal escrita (100 en vez de 10) no se puede arreglar con una merma: le llegaría
+   al jefe como mercancía perdida. Aquí se ve lo anotado en el turno y se borra lo que esté mal. */
+const dlgMovs = $('#dlgMovs');
+let movsProdId = null;
+
+function abrirMovs(p) {
+  movsProdId = p.id;
+  pintarMovs();
+  dlgMovs.showModal();
+}
+
+function pintarMovs() {
+  const p = prodPorId(movsProdId);
+  if (!p || !S.turno) return dlgMovs.close();
+  $('#movsTitulo').textContent = p.nombre;
+  $('#movsSub').textContent = `Quedan ${cant(quedaReal(p.id), p)} · toca × para borrar lo que se anotó mal`;
+
+  const movs = [
+    ...S.turno.entradas.filter((e) => e.productoId === p.id).map((e) => ({ ...e, clase: 'entrada' })),
+    ...S.turno.mermas.filter((m) => m.productoId === p.id).map((m) => ({ ...m, clase: 'merma' })),
+  ].sort((a, b) => a.hora - b.hora);
+
+  const ul = $('#listaMovs');
+  ul.innerHTML = '';
+  for (const m of movs) {
+    const titulo = m.clase === 'entrada'
+      ? (m.origen === 'sobrante' ? 'Entrada · quedó del turno anterior' : 'Entrada')
+      : `${m.cantidad > 0 ? 'Merma' : 'Sobró al pesar'} · ${m.motivo}`;
+    const signo = m.clase === 'entrada' || m.cantidad < 0 ? '+' : '−';
+    const li = document.createElement('li');
+    li.innerHTML =
+      `<div class="tk-info"><div class="tk-nom"></div><div class="tk-det"></div></div>` +
+      `<span class="tk-imp ${signo === '+' ? 'positivo' : 'negativo'}">${signo}${cant(Math.abs(m.cantidad), p)}</span>` +
+      `<button class="tk-del" title="Borrar">&times;</button>`;
+    li.querySelector('.tk-nom').textContent = titulo;
+    li.querySelector('.tk-det').textContent = `${fecha(m.hora)} ${hora(m.hora)}`;
+    li.querySelector('.tk-del').onclick = () => borrarMov(m);
+    ul.appendChild(li);
+  }
+  $('#vacioMovs').hidden = movs.length > 0;
+}
+
+function borrarMov(m) {
+  const p = prodPorId(m.productoId);
+  if (!p || !S.turno) return;
+  let msg;
+  if (m.clase === 'entrada') {
+    const quedaria = quedaReal(p.id) - m.cantidad;
+    msg = `¿Borrar la entrada de ${cant(m.cantidad, p)} de ${p.nombre}?` +
+      (quedaria < 0 ? `\n\nOjo: quedarían ${cant(quedaria, p)}, porque ya se vendió más de lo que entraría.` : '');
+  } else {
+    msg = `¿Borrar ${m.cantidad > 0 ? 'la merma' : 'el sobrante'} de ${cant(Math.abs(m.cantidad), p)} (${m.motivo})?` +
+      `\n\nLa existencia vuelve a ${cant(quedaReal(p.id) + m.cantidad, p)}.`;
+  }
+  if (!confirm(msg)) return;
+  if (m.clase === 'entrada') S.turno.entradas = S.turno.entradas.filter((e) => e.id !== m.id);
+  else S.turno.mermas = S.turno.mermas.filter((x) => x.id !== m.id);
+  guardar();
+  render();
+  pintarMovs();
+  toast(m.clase === 'entrada' ? 'Entrada borrada' : 'Merma borrada');
+}
+
 /* cerrar modales con el botón Cancelar */
 for (const b of document.querySelectorAll('[data-cerrar]')) {
   b.onclick = () => b.closest('dialog').close();
@@ -1137,6 +1207,7 @@ function releer() {
   S = cargar();
   totalPrevio = totalCaja();
   render();
+  if (dlgMovs.open) pintarMovs();
 }
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) releer();

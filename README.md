@@ -23,6 +23,7 @@ app normal, con ícono, y **funciona sin conexión** desde la segunda vez que la
 1. **Abrir turno** — arranca la caja en $0.00.
 2. **Inventario → + Producto** — nombre, si va *por peso* (lb o kg) o *por unidad*,
    el precio y cuánto te entró. Si te entra más mercancía a media mañana: **+ Entrada**.
+   Si anotaste mal una entrada o una merma: **Entradas y mermas** debajo del producto, y la `×` la borra.
 3. **Vender** — una venta puede llevar **varios productos** (10 huevos + 3.2 lb de jamón):
    - Tocas el producto, escribes cuánto lleva (el chip `lb`/`oz` cambia la unidad;
      los botones redondos son cantidades rápidas).

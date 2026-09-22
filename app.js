@@ -121,6 +121,9 @@ function toast(msg) {
 
 /* ---------------- cálculos ---------------- */
 const prodPorId = (pid) => S.productos.find((p) => p.id === pid);
+/* Al volver de otra app (WhatsApp), releer() reemplaza S entero: un modal abierto se queda
+   apuntando al producto viejo, que ya no está en S. Antes de guardar hay que buscar el de ahora. */
+const vigente = (p) => (p ? prodPorId(p.id) : null);
 
 function entradaDe(pid) {
   if (!S.turno) return 0;
@@ -569,6 +572,12 @@ $('#ventaCantidad').addEventListener('input', calcVenta);
 
 /* Mete la cantidad escrita en el pedido del cliente. Devuelve false si no hay nada que meter. */
 function agregarLinea(silencioso) {
+  vProd = vigente(vProd);
+  if (!vProd) {
+    toast('Ese producto ya no existe');
+    dlgVenta.close();
+    return false;
+  }
   const base = cantidadBaseVenta();
   if (base <= 0) {
     if (!silencioso) toast('Escribe una cantidad');
@@ -702,6 +711,11 @@ $('#formProducto').addEventListener('submit', (e) => {
     toast('Falta el nombre o el precio');
     return;
   }
+  if (pEdit) pEdit = vigente(pEdit);
+  if (pEdit === undefined) {
+    toast('Ese producto ya no existe');
+    return;
+  }
   if (pEdit) {
     Object.assign(pEdit, { nombre, precio, tipo: pTipo, unidad: pTipo === 'peso' ? pUnidad : null });
     /* La línea del pedido todavía no se cobró: se le aplica el precio y nombre nuevos.
@@ -727,6 +741,7 @@ $('#formProducto').addEventListener('submit', (e) => {
 });
 
 $('#btnBorrarProd').onclick = () => {
+  pEdit = vigente(pEdit);
   if (!pEdit) return;
   const tieneVentas = S.turno &&
     S.turno.ventas.some((v) => v.lineas.some((l) => l.productoId === pEdit.id));

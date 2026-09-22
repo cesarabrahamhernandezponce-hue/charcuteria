@@ -46,6 +46,18 @@ test('1. editar, ir a WhatsApp y volver: el cambio de precio se guarda', () => {
   assert.equal(app.guardado().productos.find((p) => p.nombre === 'Jamón').precio, 5);
 });
 
+test('1. vender con el modal abierto mientras el precio cambió en otra pestaña: cobra el precio nuevo', () => {
+  const app = turnoConProductos();
+  app.tocar(app.tarjeta('Jamón'));
+  const datos = app.guardado();
+  datos.productos.find((p) => p.nombre === 'Jamón').precio = 5;
+  app.w.localStorage.setItem('mostrador.v1', JSON.stringify(datos));
+  app.salirYVolver();
+  app.escribir('#ventaCantidad', 2);
+  app.tocar('#btnAgregarCobrar');
+  assert.equal(app.S.turno.ventas[0].total, 10);
+});
+
 /* ---------- 2. cambiar la unidad de un producto con movimientos ---------- */
 test('2. no deja cambiar lb → kg si el producto ya tiene movimientos en el turno', () => {
   const app = turnoConProductos();

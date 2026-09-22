@@ -787,12 +787,20 @@ $('#formProducto').addEventListener('submit', (e) => {
 $('#btnBorrarProd').onclick = () => {
   pEdit = vigente(pEdit);
   if (!pEdit) return;
-  const tieneVentas = S.turno &&
-    S.turno.ventas.some((v) => v.lineas.some((l) => l.productoId === pEdit.id));
-  const msg = tieneVentas
-    ? `"${pEdit.nombre}" tiene ventas en este turno. Si lo borras, esas ventas siguen contando en la caja pero ya no verás su inventario. ¿Seguir?`
-    : `¿Borrar "${pEdit.nombre}"?`;
-  if (!confirm(msg)) return;
+  /* Con ventas o mermas en el turno, borrarlo lo saca de la tabla del cierre: el dinero
+     seguiría en la caja pero la suma por productos ya no daría el total. */
+  const mv = movimientosDe(pEdit.id);
+  if (mv.ventas || mv.mermas) {
+    const que = [mv.ventas && 'ventas', mv.mermas && 'mermas'].filter(Boolean).join(' y ');
+    alert(
+      `"${pEdit.nombre}" tiene ${que} en este turno: si lo borras, el cierre deja de cuadrar.\n\n` +
+      'Podrás borrarlo después de cerrar el turno.' +
+      (mv.ventas ? '\nSi lo vendiste por error, borra antes esas ventas con la × en Vender.' : '') +
+      (mv.mermas ? '\nLas mermas se borran en Inventario → Entradas y mermas.' : '')
+    );
+    return;
+  }
+  if (!confirm(`¿Borrar "${pEdit.nombre}"?`)) return;
   S.productos = S.productos.filter((p) => p.id !== pEdit.id);
   S.sobrante = S.sobrante.filter((x) => x.productoId !== pEdit.id);
   if (S.turno) {

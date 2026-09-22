@@ -197,11 +197,31 @@ test('5. no deja borrar un producto con ventas en el turno: el cierre seguiría 
   app.tocar(app.filaInv('Jamón').querySelector('[data-edit]'));
   app.tocar('#btnBorrarProd');
   assert.ok(app.producto('Jamón'), 'el producto sigue');
+  assert.match(app.preguntas.at(-1), /tiene ventas/);
   const filasCierre = app.w.document.querySelectorAll('#tablaCierre tbody tr');
   assert.equal(filasCierre.length, 2);
   // la suma por producto da el total de la caja
   const suma = app.S.productos.reduce((a, p) => a + app.correr(`dineroDe(${JSON.stringify(p.id)})`), 0);
   assert.equal(suma, app.correr('totalCaja()'));
+});
+
+test('5. tampoco con mermas; borrada la merma, ya se puede', () => {
+  const app = turnoConProductos();
+  app.tocar(app.filaInv('Huevos').querySelector('[data-merma]'));
+  app.tocar('#mermaModo [data-modo="perdida"]');
+  app.escribir('#mermaCantidad', 2);
+  app.enviar('#formMerma');
+  app.tocar(app.filaInv('Huevos').querySelector('[data-edit]'));
+  app.tocar('#btnBorrarProd');
+  assert.ok(app.producto('Huevos'));
+  assert.match(app.preguntas.at(-1), /mermas/);
+
+  app.tocar(app.filaInv('Huevos').querySelector('[data-movs]'));
+  const merma = [...app.w.document.querySelectorAll('#listaMovs li')].find((li) => /merma/i.test(li.textContent));
+  app.tocar(merma.querySelector('.tk-del'));
+  app.tocar(app.filaInv('Huevos').querySelector('[data-edit]'));
+  app.tocar('#btnBorrarProd');
+  assert.equal(app.producto('Huevos'), undefined);
 });
 
 test('5. un producto recién creado por error (solo con entrada) sí se borra', () => {

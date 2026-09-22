@@ -34,6 +34,7 @@ function abrirApp(datos) {
   const preguntas = [];
   w.confirm = (msg) => { preguntas.push(msg); return respuestas.length ? respuestas.shift() : true; };
   w.prompt = (msg) => { preguntas.push(msg); return respuestas.length ? respuestas.shift() : ''; };
+  w.alert = (msg) => { preguntas.push(msg); };
 
   if (datos) w.localStorage.setItem(KEY, JSON.stringify(datos));
   /* Como <script> de verdad: sus let/const (S, quedaReal…) quedan visibles para las pruebas */

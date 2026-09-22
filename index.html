@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17150f">
+<title>JM — Caja y Turno</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="caja" id="cajaBar">
+  <img class="marca" src="assets/logo-crema.png" alt="JM" width="420" height="286">
+  <div class="caja-main">
+    <span class="caja-label">Debe haber en caja</span>
+    <strong class="caja-monto" id="cajaMonto">$0.00</strong>
+  </div>
+  <div class="caja-meta">
+    <span id="cajaVentas">0 ventas</span>
+    <span id="cajaTurno">sin turno</span>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab is-active" data-view="venta" role="tab">Vender</button>
+  <button class="tab" data-view="inventario" role="tab">Inventario</button>
+  <button class="tab" data-view="cierre" role="tab">Cierre</button>
+</nav>
+
+<main>
+  <!-- ============ VENDER ============ -->
+  <section class="view is-active" id="view-venta">
+
+    <div class="sin-turno" id="sinTurno" hidden>
+      <figure class="marco marco-cerdo">
+        <img src="assets/cerdo.jpg" alt="El cerdo carnicero pintado en la pared del negocio"
+             width="440" height="626" loading="lazy">
+      </figure>
+      <p class="negocio">JM · Charcutería</p>
+      <h2>No hay turno abierto</h2>
+      <p>Abre tu turno para empezar a registrar las entradas y las ventas del día.</p>
+      <button class="btn btn-primary btn-lg" id="btnAbrirTurno">Abrir turno</button>
+    </div>
+
+    <div id="turnoActivo" hidden>
+      <div class="aviso-pesar" id="avisoPesar" hidden>
+        <div class="aviso-txt">
+          <b>Antes de empezar, pesa lo que quedó.</b>
+          El lomo y lo que estuvo congelado pierden peso en los días de descanso.
+          Ajusta la diferencia en <i>Inventario</i> → <b>Merma</b> y arrancas con la existencia real.
+        </div>
+        <div class="aviso-acc">
+          <button class="btn" id="btnIrInventario">Ir a Inventario</button>
+          <button class="btn btn-link2" id="btnYaPese">Ya lo pesé</button>
+        </div>
+      </div>
+
+      <div class="pedido" id="pedidoPanel" hidden>
+        <div class="pedido-head">
+          <h2>Pedido del cliente</h2>
+          <button class="btn-link" id="btnVaciarPedido">Vaciar</button>
+        </div>
+        <ul class="ticket ticket-pedido" id="listaPedido"></ul>
+        <button class="btn btn-primary btn-cobrar" id="btnCobrar">Cobrar</button>
+      </div>
+
+      <div class="split">
+        <div class="col-productos">
+          <div class="section-head">
+            <h2>Productos</h2>
+            <span class="hint">Toca uno para vender</span>
+          </div>
+          <div class="grid-prod" id="gridVenta"></div>
+          <p class="vacio" id="vacioVenta" hidden>
+            Todavía no tienes productos. Ve a <b>Inventario</b> y agrega lo que te entró en el turno.
+          </p>
+        </div>
+
+        <div class="col-ticket">
+          <div class="section-head">
+            <h2>Ventas del turno</h2>
+            <span class="hint" id="ticketCount"></span>
+          </div>
+          <ul class="ticket" id="listaVentas"></ul>
+          <div class="vacio vacio-arte" id="vacioVentas">
+            <figure class="marco">
+              <img src="assets/bodegon-2.jpg" alt="Bodegón pintado en la pared"
+                   width="560" height="529" loading="lazy">
+            </figure>
+            <p>Aún no has vendido nada en este turno.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INVENTARIO ============ -->
+  <section class="view" id="view-inventario">
+    <div class="section-head">
+      <h2>Inventario del turno</h2>
+      <button class="btn btn-primary" id="btnNuevoProducto">+ Producto</button>
+    </div>
+
+    <ul class="inv" id="listaInventario"></ul>
+    <div class="vacio vacio-arte" id="vacioInv">
+      <figure class="marco">
+        <img src="assets/bodegon-1.jpg" alt="Bodegón pintado en la pared"
+             width="560" height="487" loading="lazy">
+      </figure>
+      <p>Sin productos. Agrega el primero con <b>+ Producto</b>: le pones nombre, precio y cuánto te entró.</p>
+    </div>
+  </section>
+
+  <!-- ============ CIERRE ============ -->
+  <section class="view" id="view-cierre">
+    <div class="section-head"><h2>Cierre de turno</h2></div>
+
+    <details class="pasos" id="pasos">
+      <summary>Cómo cerrar el turno · 6 pasos</summary>
+      <ol>
+        <li><b>Cobra o vacía el pedido</b> que tengas a medias. Si no, la app no deja cerrar.</li>
+        <li><b>Pesa lo que queda y anota la merma</b> en <i>Inventario</i> → <b>Merma</b>.
+            Así lo que entregas es lo que de verdad hay, y el dueño ve cuánto se perdió.</li>
+        <li><b>Cuenta el dinero</b> contra el número de abajo. Si no cuadra, revisa la lista de
+            ventas en <i>Vender</i> — la <b>×</b> borra una venta mal puesta.</li>
+        <li><b>Copiar resumen</b> y lo mandas por WhatsApp.</li>
+        <li><b>Respaldo completo (.json)</b> y guarda ese archivo fuera del equipo
+            (correo, tu propio WhatsApp, una memoria). Es lo único que te salva si se borra el navegador.</li>
+        <li><b>Cerrar turno</b>. Te pregunta si pasas lo que quedó como entrada del próximo turno:
+            <b>Sí</b> si la mercancía se queda para mañana, <b>No</b> si mañana empiezas de cero.</li>
+      </ol>
+    </details>
+
+    <div id="cierreBody">
+      <div class="resumen-caja">
+        <span>Dinero que debe haber en caja</span>
+        <strong id="cierreTotal">$0.00</strong>
+        <small id="cierreInfo"></small>
+        <small class="merma-linea" id="cierreMerma" hidden></small>
+      </div>
+
+      <h3 class="sub">Qué queda de cada producto</h3>
+      <div class="tabla-wrap">
+        <table class="tabla" id="tablaCierre">
+          <thead>
+            <tr><th>Producto</th><th>Entró</th><th>Vendido</th><th>Merma</th><th>Queda</th><th>Dinero</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="cierre-acciones">
+        <button class="btn" id="btnCopiar">Copiar resumen</button>
+        <button class="btn btn-oscuro" id="btnCerrarTurno">Cerrar turno</button>
+      </div>
+    </div>
+
+    <p class="vacio" id="vacioCierre" hidden>No hay turno abierto.</p>
+
+    <div id="historialWrap" hidden>
+      <h3 class="sub">Turnos anteriores</h3>
+      <ul class="historial" id="listaHistorial"></ul>
+    </div>
+
+    <h3 class="sub">Guardar fuera de la app</h3>
+    <div class="datos">
+      <p class="datos-txt" id="datosResumen"></p>
+      <div class="datos-acciones">
+        <button class="btn" id="btnCsv">Historial en tabla (.csv)</button>
+        <button class="btn" id="btnJson">Respaldo completo (.json)</button>
+        <button class="btn" id="btnImportar">Restaurar respaldo</button>
+      </div>
+      <p class="datos-nota">
+        El <b>.csv</b> se abre en Excel para revisar los turnos.
+        El <b>.json</b> es el respaldo de verdad: guárdalo y con <b>Restaurar</b> vuelve todo como estaba.
+      </p>
+      <input type="file" id="inputImportar" accept=".json,application/json" hidden>
+      <button class="btn-link btn-link-peligro" id="btnBorrarTodo">Borrar todo y empezar de cero</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ MODAL VENTA ============ -->
+<dialog class="modal" id="dlgVenta">
+  <form method="dialog" id="formVenta">
+    <h3 id="ventaTitulo">Vender</h3>
+    <p class="modal-sub" id="ventaSub"></p>
+
+    <label class="campo">
+      <span id="ventaLabelCant">Cantidad</span>
+      <div class="input-unidad">
+        <input type="text" inputmode="decimal" id="ventaCantidad" autocomplete="off" required>
+        <button type="button" class="chip-unidad" id="ventaToggleUnidad" hidden></button>
+      </div>
+    </label>
+
+    <div class="quick" id="ventaQuick"></div>
+
+    <div class="importe">
+      <span>Importe</span>
+      <strong id="ventaImporte">$0.00</strong>
+    </div>
+    <p class="aviso" id="ventaAviso" hidden></p>
+
+    <div class="modal-acciones modal-acciones-venta">
+      <button type="button" class="btn btn-link-cancel" data-cerrar>Cancelar</button>
+      <button type="submit" class="btn" id="btnAgregarSeguir">+ Agregar y seguir</button>
+      <button type="button" class="btn btn-primary" id="btnAgregarCobrar">Cobrar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ MODAL PRODUCTO ============ -->
+<dialog class="modal" id="dlgProducto">
+  <form method="dialog" id="formProducto">
+    <h3 id="prodTitulo">Nuevo producto</h3>
+
+    <label class="campo">
+      <span>Nombre</span>
+      <input type="text" id="prodNombre" placeholder="Jamón de pierna" required>
+    </label>
+
+    <div class="campo">
+      <span>¿Cómo se vende?</span>
+      <div class="segmented" id="prodTipo">
+        <button type="button" data-tipo="peso" class="is-on">Por peso</button>
+        <button type="button" data-tipo="unidad">Por unidad</button>
+      </div>
+    </div>
+
+    <div class="campo" id="prodUnidadWrap">
+      <span>Unidad de medida</span>
+      <div class="segmented" id="prodUnidad">
+        <button type="button" data-unidad="lb" class="is-on">Libra (lb)</button>
+        <button type="button" data-unidad="kg">Kilo (kg)</button>
+      </div>
+    </div>
+
+    <label class="campo">
+      <span id="prodPrecioLabel">Precio por libra</span>
+      <input type="text" inputmode="decimal" id="prodPrecio" placeholder="0.00" required>
+    </label>
+
+    <label class="campo">
+      <span id="prodEntradaLabel">Entró en el turno (lb)</span>
+      <input type="text" inputmode="decimal" id="prodEntrada" placeholder="0">
+    </label>
+
+    <div class="modal-acciones">
+      <button type="button" class="btn btn-ghost-danger" id="btnBorrarProd" hidden>Borrar</button>
+      <button type="button" class="btn" data-cerrar>Cancelar</button>
+      <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ MODAL MERMA ============ -->
+<dialog class="modal" id="dlgMerma">
+  <form method="dialog" id="formMerma">
+    <h3>Merma o ajuste</h3>
+    <p class="modal-sub" id="mermaSub"></p>
+
+    <div class="campo">
+      <span>¿Cómo lo vas a anotar?</span>
+      <div class="segmented" id="mermaModo">
+        <button type="button" data-modo="conteo" class="is-on">Pesé y quedan</button>
+        <button type="button" data-modo="perdida">Se perdió</button>
+      </div>
+    </div>
+
+    <label class="campo">
+      <span id="mermaLabel">Lo que hay de verdad</span>
+      <input type="text" inputmode="decimal" id="mermaCantidad" autocomplete="off" required>
+    </label>
+
+    <div class="campo">
+      <span>Motivo</span>
+      <div class="quick" id="mermaMotivos"></div>
+    </div>
+
+    <div class="importe">
+      <span>Diferencia</span>
+      <strong id="mermaResultado">—</strong>
+    </div>
+    <p class="aviso" id="mermaAviso" hidden></p>
+
+    <div class="modal-acciones">
+      <button type="button" class="btn" data-cerrar>Cancelar</button>
+      <button type="submit" class="btn btn-primary">Anotar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ MODAL ENTRADA ============ -->
+<dialog class="modal" id="dlgEntrada">
+  <form method="dialog" id="formEntrada">
+    <h3>Entró mercancía</h3>
+    <p class="modal-sub" id="entradaSub"></p>
+    <label class="campo">
+      <span id="entradaLabel">Cantidad que entró</span>
+      <input type="text" inputmode="decimal" id="entradaCantidad" autocomplete="off" required>
+    </label>
+    <div class="modal-acciones">
+      <button type="button" class="btn" data-cerrar>Cancelar</button>
+      <button type="submit" class="btn btn-primary">Sumar al inventario</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+/* ---------- base ---------- */
+/* Colores sacados de la marca y de los murales del negocio:
+   el negro del logo de la salamandra, el vino del jamón, el amarillo del queso,
+   el azul del overol del cerdo y el blanco cálido de la pared pintada. */
+:root{
+  --papel:#f3efe7;
+  --papel-2:#fbf9f5;
+  --linea:#e0d8c9;
+  --tinta:#17150f;
+  --tinta-2:#6b6355;
+  --vino:#7d2230;
+  --vino-claro:#a5394a;
+  --queso:#e0a81c;
+  --azul:#2b5ea8;
+  --oliva:#4e5c31;
+  --rojo:#b3261e;
+  --ambar:#9a6a0d;
+  --r:14px;
+  --sombra:0 1px 2px rgba(23,21,15,.06), 0 8px 24px -16px rgba(23,21,15,.4);
+}
+*{box-sizing:border-box}
+/* hidden es un atributo, pero cualquier display: lo pisa; esto lo deja siempre mandando */
+[hidden]{display:none !important}
+html,body{margin:0}
+body{
+  background:var(--papel);
+  color:var(--tinta);
+  font:16px/1.45 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
+button{font:inherit;color:inherit}
+input{font:inherit}
+
+/* ---------- barra de caja ---------- */
+.caja{
+  position:sticky; top:0; z-index:20;
+  background:var(--tinta); color:var(--papel);
+  padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  box-shadow:0 6px 20px -12px rgba(0,0,0,.6);
+}
+.caja{align-items:center}
+.marca{height:34px;width:auto;flex:0 0 auto;margin-right:2px}
+.caja-main{display:flex;flex-direction:column;min-width:0;margin-right:auto}
+.caja-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--queso);white-space:nowrap}
+.caja-monto{
+  font-size:clamp(30px,8vw,42px); line-height:1.05; font-weight:700;
+  font-variant-numeric:tabular-nums; letter-spacing:-.02em;
+}
+.caja-monto.pulse{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.07)}100%{transform:scale(1)}}
+.caja-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:12px;opacity:.8;text-align:right;white-space:nowrap}
+
+/* ---------- tabs ---------- */
+.tabs{
+  position:sticky; top:var(--caja-h,72px); z-index:15;
+  display:flex; background:var(--papel-2); border-bottom:1px solid var(--linea);
+}
+.tab{
+  flex:1; padding:14px 8px; background:none; border:0; cursor:pointer;
+  font-weight:600; color:var(--tinta-2); border-bottom:3px solid transparent;
+}
+.tab.is-active{color:var(--vino); border-bottom-color:var(--vino)}
+
+main{max-width:1100px;margin:0 auto;padding:16px 16px 64px}
+.view{display:none}
+.view.is-active{display:block}
+
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px}
+.section-head h2{font-size:18px}
+.hint{font-size:13px;color:var(--tinta-2)}
+.sub{font-size:15px;margin:26px 0 10px;color:var(--tinta-2);text-transform:uppercase;letter-spacing:.07em}
+.vacio{color:var(--tinta-2);font-size:14px;background:var(--papel-2);border:1px dashed var(--linea);border-radius:var(--r);padding:18px;text-align:center}
+
+/* ---------- cuadros del pintor ---------- */
+/* Son fotos de los murales de la pared: van enmarcados, como los cuadros que son. */
+.marco{
+  margin:0 auto; padding:10px; max-width:260px;
+  background:#fff; border:1px solid var(--linea); border-radius:12px;
+  box-shadow:var(--sombra); line-height:0;
+}
+.marco img{width:100%;height:auto;border-radius:6px}
+.marco-cerdo{max-width:190px;margin-bottom:22px}
+.vacio-arte{display:flex;flex-direction:column;align-items:center;gap:16px;padding:22px}
+.vacio-arte .marco{max-width:200px}
+.vacio-arte p{margin:0}
+
+/* ---------- botones ---------- */
+.btn{
+  border:1px solid var(--linea); background:var(--papel-2); color:var(--tinta);
+  padding:11px 16px; border-radius:11px; cursor:pointer; font-weight:600;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--vino);border-color:var(--vino);color:#fff}
+.btn-danger{background:var(--rojo);border-color:var(--rojo);color:#fff}
+/* cerrar el turno es la acción final del día: negro de la marca, no rojo de alarma */
+.btn-oscuro{background:var(--tinta);border-color:var(--tinta);color:var(--papel)}
+.btn-ghost-danger{color:var(--rojo);border-color:#e8c9c6;margin-right:auto}
+.btn-lg{padding:15px 26px;font-size:17px}
+
+/* ---------- sin turno ---------- */
+.sin-turno{text-align:center;padding:48px 20px;background:var(--papel-2);border:1px solid var(--linea);border-radius:var(--r)}
+.negocio{margin:0 0 4px;font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--vino)}
+.sin-turno h2{font-size:20px;margin-bottom:8px}
+.sin-turno p{color:var(--tinta-2);max-width:34ch;margin:0 auto 22px}
+
+/* ---------- layout vender ---------- */
+.split{display:grid;gap:26px}
+@media(min-width:880px){
+  .split{grid-template-columns:1fr 360px;gap:32px;align-items:start}
+  .col-ticket{position:sticky;top:calc(var(--caja-h,72px) + var(--tabs-h,51px) + 16px)}
+}
+
+.grid-prod{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.card-prod{
+  text-align:left; background:var(--papel-2); border:1px solid var(--linea);
+  border-radius:var(--r); padding:13px 14px; cursor:pointer; box-shadow:var(--sombra);
+  display:flex;flex-direction:column;gap:5px;min-height:92px;
+}
+.card-prod:active{background:#f1e9dd}
+.card-prod .nom{font-weight:650;line-height:1.25}
+.card-prod .pre{font-size:13px;color:var(--vino);font-weight:600;font-variant-numeric:tabular-nums}
+.card-prod .qda{font-size:12px;color:var(--oliva);margin-top:auto;font-variant-numeric:tabular-nums;font-weight:600}
+.card-prod.agotado{opacity:.55}
+.card-prod.agotado .qda{color:var(--rojo);font-weight:600}
+
+/* ---------- aviso de pesar al abrir el turno ---------- */
+.aviso-pesar{
+  background:var(--papel-2); border:1px solid var(--linea); border-left:4px solid var(--azul);
+  border-radius:var(--r); padding:14px 15px; margin-bottom:18px;
+  display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+}
+.aviso-txt{flex:1;min-width:210px;font-size:14px;line-height:1.5;color:var(--tinta-2)}
+.aviso-txt b{color:var(--tinta)}
+.aviso-acc{display:flex;gap:8px;align-items:center}
+.aviso-acc .btn{padding:9px 14px;font-size:14px}
+.btn-link2{border:0;background:none;color:var(--tinta-2);text-decoration:underline}
+
+/* ---------- pedido del cliente ---------- */
+.pedido{
+  position:sticky; top:calc(var(--caja-h,72px) + var(--tabs-h,51px)); z-index:12;
+  background:var(--papel-2); border:2px solid var(--queso); border-radius:var(--r);
+  padding:12px 13px 13px; margin-bottom:20px; box-shadow:0 10px 24px -18px rgba(0,0,0,.5);
+}
+.pedido-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.pedido-head h2{font-size:15px;text-transform:uppercase;letter-spacing:.07em;color:var(--ambar)}
+.btn-link{background:none;border:0;color:var(--tinta-2);cursor:pointer;font-size:13px;font-weight:600;text-decoration:underline;padding:4px}
+.ticket-pedido{max-height:34vh;overflow-y:auto;border-color:var(--linea)}
+.btn-cobrar{width:100%;margin-top:10px;padding:15px;font-size:18px}
+
+/* ---------- ticket ---------- */
+.ticket{list-style:none;margin:0;padding:0;background:var(--papel-2);border:1px solid var(--linea);border-radius:var(--r);overflow:hidden}
+.ticket:empty{display:none}
+.ticket li{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--linea)}
+.ticket li:last-child{border-bottom:0}
+.ticket li.nuevo{animation:entra .3s ease}
+@keyframes entra{from{background:#fdf0d9}to{background:transparent}}
+.tk-info{flex:1;min-width:0}
+.tk-nom{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk-det{font-size:12px;color:var(--tinta-2);font-variant-numeric:tabular-nums}
+.tk-imp{font-weight:650;font-variant-numeric:tabular-nums}
+.tk-del{border:0;background:none;color:var(--tinta-2);cursor:pointer;font-size:20px;line-height:1;padding:4px 6px;border-radius:8px}
+.tk-del:hover{background:#f6e7e5;color:var(--rojo)}
+
+/* separador de día dentro de un turno de varios días */
+.tk-dia{
+  background:var(--papel); justify-content:space-between; padding:8px 13px;
+  font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--tinta-2);
+}
+.tk-dia b{color:var(--tinta);font-variant-numeric:tabular-nums;letter-spacing:0}
+
+/* ---------- inventario ---------- */
+.inv{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.inv li{
+  background:var(--papel-2);border:1px solid var(--linea);border-radius:var(--r);
+  padding:13px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--sombra);
+}
+.inv .iv-main{flex:1;min-width:150px}
+.inv .iv-nom{font-weight:650}
+.inv .iv-sub{font-size:13px;color:var(--tinta-2);font-variant-numeric:tabular-nums}
+.inv .iv-num{text-align:right;font-variant-numeric:tabular-nums}
+.inv .iv-num b{display:block;font-size:17px}
+.inv .iv-num small{color:var(--ambar);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.inv .iv-acc{display:flex;gap:6px}
+.inv .iv-acc .btn{padding:8px 12px;font-size:14px}
+.negativo{color:var(--rojo)}
+.positivo{color:var(--oliva)}
+.sub-merma{color:var(--ambar);font-weight:600}
+.merma-linea{color:#f1d9a8;font-size:13px}
+/* motivo elegido dentro del modal de merma */
+.quick button.is-on{background:var(--vino);border-color:var(--vino);color:#fff}
+
+/* ---------- pasos del cierre ---------- */
+.pasos{
+  background:var(--papel-2); border:1px solid var(--linea); border-left:4px solid var(--queso);
+  border-radius:var(--r); margin-bottom:18px; overflow:hidden;
+}
+.pasos summary{
+  padding:13px 15px; cursor:pointer; font-weight:650; font-size:14px; color:var(--ambar);
+  text-transform:uppercase; letter-spacing:.05em; list-style:none;
+}
+.pasos summary::-webkit-details-marker{display:none}
+.pasos summary::after{content:' ▾';float:right;font-size:12px;opacity:.7}
+.pasos[open] summary::after{content:' ▴'}
+.pasos ol{margin:0;padding:0 18px 16px 34px;display:grid;gap:9px;font-size:14px;line-height:1.5}
+.pasos li{padding-left:2px}
+.pasos li::marker{color:var(--ambar);font-weight:700}
+
+/* ---------- cierre ---------- */
+.resumen-caja{
+  background:var(--vino);color:#fdf6f1;border-radius:var(--r);padding:20px;
+  display:flex;flex-direction:column;gap:2px;
+}
+.resumen-caja span{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--queso)}
+.resumen-caja strong{font-size:38px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.resumen-caja small{opacity:.8;font-size:13px}
+.tabla-wrap{overflow-x:auto;border:1px solid var(--linea);border-radius:var(--r);background:var(--papel-2)}
+.tabla{width:100%;border-collapse:collapse;font-size:14px;min-width:460px}
+.tabla th{text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--tinta-2);padding:11px 12px;border-bottom:1px solid var(--linea)}
+.tabla th:first-child,.tabla td:first-child{text-align:left}
+.tabla td{padding:11px 12px;border-bottom:1px solid var(--linea);text-align:right;font-variant-numeric:tabular-nums}
+.tabla tr:last-child td{border-bottom:0}
+.tabla td:first-child{font-weight:600}
+@media(max-width:640px){
+  .tabla{min-width:0}
+  .tabla thead{display:none}
+  .tabla tr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 10px;padding:12px 14px;border-bottom:1px solid var(--linea)}
+  .tabla tr:last-child{border-bottom:0}
+  .tabla td{border:0;padding:0;text-align:left;font-size:15px}
+  .tabla td:first-child{grid-column:1/-1;margin-bottom:4px}
+  .tabla td::before{content:attr(data-label);display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tinta-2);font-weight:600}
+}
+.cierre-acciones{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.cierre-acciones .btn{flex:1;min-width:150px}
+.historial{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.historial li{background:var(--papel-2);border:1px solid var(--linea);border-radius:11px;padding:12px 14px;display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.historial b{font-variant-numeric:tabular-nums}
+.historial small{display:block;color:var(--tinta-2);font-size:12px}
+
+.datos{background:var(--papel-2);border:1px solid var(--linea);border-radius:var(--r);padding:16px}
+.datos-txt{margin:0 0 12px;font-size:14px;color:var(--tinta-2);font-variant-numeric:tabular-nums}
+.datos-acciones{display:flex;gap:8px;flex-wrap:wrap}
+.datos-acciones .btn{flex:1;min-width:150px;font-size:14px}
+.datos-nota{margin:14px 0 0;font-size:13px;color:var(--tinta-2);line-height:1.5}
+.btn-link-peligro{display:block;margin:18px 0 0;color:var(--rojo)}
+
+/* ---------- modales ---------- */
+.modal{
+  border:0;border-radius:18px;padding:0;width:min(420px,calc(100vw - 24px));
+  background:var(--papel-2);color:var(--tinta);box-shadow:0 24px 60px -20px rgba(0,0,0,.5);
+}
+.modal::backdrop{background:rgba(36,29,24,.45)}
+.modal form{padding:22px}
+.modal h3{font-size:19px}
+.modal-sub{margin:4px 0 16px;color:var(--tinta-2);font-size:14px}
+.campo{display:block;margin-bottom:14px}
+.campo>span{display:block;font-size:13px;font-weight:600;color:var(--tinta-2);margin-bottom:6px}
+.campo input{
+  width:100%;padding:13px 14px;border:1px solid var(--linea);border-radius:11px;
+  background:var(--papel);font-size:17px;font-variant-numeric:tabular-nums;
+}
+.campo input:focus{outline:2px solid var(--vino-claro);outline-offset:1px}
+.input-unidad{display:flex;gap:8px}
+.chip-unidad{
+  flex:0 0 auto;padding:0 16px;border:1px solid var(--linea);border-radius:11px;
+  background:var(--papel);font-weight:650;cursor:pointer;color:var(--vino);
+}
+.segmented{display:flex;border:1px solid var(--linea);border-radius:11px;overflow:hidden}
+.segmented button{flex:1;padding:11px 6px;background:var(--papel);border:0;cursor:pointer;font-weight:600;color:var(--tinta-2)}
+.segmented button.is-on{background:var(--vino);color:#fff}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 14px}
+.quick button{
+  border:1px solid var(--linea);background:var(--papel);border-radius:999px;
+  padding:7px 13px;font-size:14px;cursor:pointer;font-weight:600;color:var(--vino);
+}
+.importe{display:flex;justify-content:space-between;align-items:baseline;padding:13px 0;border-top:1px dashed var(--linea);margin-bottom:6px}
+.importe span{font-size:13px;color:var(--tinta-2);text-transform:uppercase;letter-spacing:.07em}
+.importe strong{font-size:26px;font-variant-numeric:tabular-nums}
+.aviso{margin:0 0 12px;font-size:13px;color:var(--ambar);font-weight:600}
+.modal-acciones{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+
+.modal-acciones-venta{flex-wrap:wrap;align-items:center}
+.modal-acciones-venta .btn-link-cancel{border:0;background:none;color:var(--tinta-2);padding:11px 4px;margin-right:auto;text-decoration:underline}
+.modal-acciones-venta #btnAgregarSeguir{flex:0 0 auto}
+.modal-acciones-venta #btnAgregarCobrar{flex:0 0 auto}
+@media(max-width:400px){
+  .modal-acciones-venta #btnAgregarSeguir,.modal-acciones-venta #btnAgregarCobrar{flex:1 1 100%}
+  .modal-acciones-venta .btn-link-cancel{order:3;margin:6px auto 0}
+}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  background:var(--tinta);color:var(--papel);padding:12px 20px;border-radius:999px;
+  font-size:14px;font-weight:600;z-index:60;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);
+  animation:sube .25s ease;
+}
+@keyframes sube{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --papel:#14120e;
+    --papel-2:#1f1c16;
+    --linea:#39332a;
+    --tinta:#f3efe7;
+    --tinta-2:#a79c8a;
+    --vino:#a5394a;
+    --vino-claro:#c4596a;
+    --queso:#e8bb3c;
+    --azul:#5b8ad0;
+    --oliva:#8aa05c;
+    --rojo:#e06a5f;
+    --ambar:#d79a33;
+    --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+  /* la barra de caja mantiene el negro de la marca */
+  .caja{background:#0d0b08;color:#f3efe7}
+  .card-prod:active{background:#2a251d}
+  .tk-del:hover{background:#3a2622}
+  .btn-ghost-danger{border-color:#5a3630}
+  .marco{background:#e9e4da;border-color:#3f382e}
+}

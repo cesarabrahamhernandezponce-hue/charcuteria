@@ -1,0 +1,811 @@
+<meta charset="utf-8">
+<title>Manual del Mostrador JM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600;6..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+  /* ============================================================
+     Paleta tomada de la propia app: el negro del logo de JM,
+     el vino del jamón, el amarillo del queso, el azul del overol
+     del cerdo y el blanco cálido de la pared del local.
+     ============================================================ */
+  :root{
+    --papel:#f4f0e8;
+    --papel-2:#fbf9f4;
+    --papel-3:#ece6d9;
+    --tinta:#17150f;
+    --tinta-2:#5f584c;
+    --tinta-3:#8b8172;
+    --linea:#ddd4c3;
+    --vino:#7d2230;
+    --vino-2:#a5394a;
+    --ambar:#8a6410;
+    --queso:#e0a81c;
+    --oliva:#4e5c31;
+    --azul:#2b5ea8;
+    --codigo:#f7f3ea;
+    --portada-bg:#17150f;
+    --portada-fg:#f4f0e8;
+    --portada-fg-2:#d9d1c3;
+    --portada-fg-3:#a89d8c;
+    --portada-fg-4:#6f6658;
+    --sombra:0 1px 2px rgba(23,21,15,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --papel:#14120e;
+      --papel-2:#1d1a15;
+      --papel-3:#24201a;
+      --tinta:#f3efe7;
+      --tinta-2:#a99e8c;
+      --tinta-3:#7d7364;
+      --linea:#363027;
+      --vino:#c4596a;
+      --vino-2:#d4798a;
+      --ambar:#dba63a;
+      --queso:#e8bb3c;
+      --oliva:#8aa05c;
+      --azul:#6f9ada;
+      --codigo:#1b1813;
+      --portada-bg:#0a0806;
+      --portada-fg:#f3efe7;
+      --portada-fg-2:#cec5b6;
+      --portada-fg-3:#9d9284;
+      --portada-fg-4:#6b6255;
+      --sombra:0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --papel:#14120e;
+    --papel-2:#1d1a15;
+    --papel-3:#24201a;
+    --tinta:#f3efe7;
+    --tinta-2:#a99e8c;
+    --tinta-3:#7d7364;
+    --linea:#363027;
+    --vino:#c4596a;
+    --vino-2:#d4798a;
+    --ambar:#dba63a;
+    --queso:#e8bb3c;
+    --oliva:#8aa05c;
+    --azul:#6f9ada;
+    --codigo:#1b1813;
+    --portada-bg:#0a0806;
+    --portada-fg:#f3efe7;
+    --portada-fg-2:#cec5b6;
+    --portada-fg-3:#9d9284;
+    --portada-fg-4:#6b6255;
+    --sombra:0 1px 2px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--papel);
+    color:var(--tinta);
+    font:16px/1.65 "IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- portada ---------- */
+  .portada{
+    background:var(--portada-bg);
+    color:var(--portada-fg);
+    padding:56px 24px 48px;
+  }
+  .portada-caja{max-width:1180px;margin:0 auto;display:flex;gap:40px;align-items:flex-end;flex-wrap:wrap}
+  .portada-txt{flex:1;min-width:280px}
+  .sello{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--queso);margin:0 0 14px;
+  }
+  h1{
+    font-family:"Bodoni Moda",Georgia,serif;
+    font-size:clamp(38px,6.4vw,66px);
+    line-height:1.02;margin:0 0 16px;font-weight:600;letter-spacing:-.015em;
+    text-wrap:balance;
+  }
+  .bajada{margin:0;font-size:17px;line-height:1.6;color:var(--portada-fg-2);max-width:56ch}
+  .ficha{
+    display:grid;gap:2px 22px;grid-template-columns:auto auto;align-content:end;
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--portada-fg-3);
+  }
+  .ficha dt{color:var(--portada-fg-4);text-transform:uppercase;letter-spacing:.08em;font-size:11px;align-self:center}
+  .ficha dd{margin:0;color:var(--portada-fg)}
+
+  /* ---------- armazón ---------- */
+  .armazon{max-width:1180px;margin:0 auto;padding:0 24px 96px;display:grid;gap:52px}
+  @media(min-width:1040px){
+    .armazon{grid-template-columns:210px minmax(0,1fr);gap:64px;align-items:start}
+    .indice{position:sticky;top:32px}
+  }
+
+  .indice{padding-top:40px}
+  .indice h2{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--tinta-3);margin:0 0 14px;font-weight:600;
+  }
+  .indice ol{list-style:none;margin:0 0 26px;padding:0;display:grid;gap:7px}
+  .indice a{
+    color:var(--tinta-2);text-decoration:none;font-size:14px;line-height:1.35;
+    display:block;border-left:2px solid var(--linea);padding-left:11px;
+  }
+  .indice a:hover,.indice a:focus-visible{color:var(--vino);border-left-color:var(--vino)}
+
+  main{padding-top:40px;min-width:0}
+  section{margin-bottom:60px;scroll-margin-top:24px}
+  .parte{
+    display:flex;align-items:baseline;gap:14px;margin:0 0 34px;
+    padding-bottom:14px;border-bottom:2px solid var(--tinta);
+  }
+  .parte span{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--vino);
+  }
+  .parte h2{font-family:"Bodoni Moda",Georgia,serif;font-size:30px;margin:0;font-weight:600;letter-spacing:-.01em}
+
+  h3{
+    font-family:"Bodoni Moda",Georgia,serif;font-size:25px;font-weight:600;
+    margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance;
+  }
+  .sub{color:var(--tinta-2);margin:0 0 20px;max-width:68ch}
+  p{max-width:68ch}
+  h4{font-size:15px;margin:26px 0 8px;font-weight:600}
+  a{color:var(--vino)}
+
+  code{
+    font-family:"IBM Plex Mono",monospace;font-size:.88em;
+    background:var(--papel-3);padding:.12em .4em;border-radius:4px;
+  }
+  pre{
+    background:var(--codigo);border:1px solid var(--linea);border-radius:8px;
+    padding:15px 17px;overflow-x:auto;margin:16px 0;
+    font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.6;
+  }
+  pre code{background:none;padding:0;font-size:inherit}
+  .com{color:var(--tinta-3)}
+  .cad{color:var(--oliva)}
+
+  /* ---------- pasos numerados (son secuencia de verdad) ---------- */
+  .pasos{list-style:none;counter-reset:p;margin:18px 0;padding:0;display:grid;gap:16px}
+  .pasos li{counter-increment:p;display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start}
+  .pasos li::before{
+    content:counter(p,decimal-leading-zero);
+    font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+    color:var(--vino);padding-top:4px;letter-spacing:.04em;
+  }
+  .pasos b{font-weight:600}
+  .pasos p{grid-column:2;margin:2px 0 0;color:var(--tinta-2);font-size:14.5px}
+
+  /* ---------- decisiones: título a la izquierda, razón a la derecha ---------- */
+  .dec{display:grid;grid-template-columns:minmax(0,1fr);gap:8px 32px;padding:22px 0;border-top:1px solid var(--linea)}
+  .dec:last-of-type{border-bottom:1px solid var(--linea)}
+  @media(min-width:760px){.dec{grid-template-columns:270px minmax(0,1fr)}}
+  .dec-tit{margin:0}
+  .dec-tit strong{
+    display:block;font-family:"Bodoni Moda",Georgia,serif;font-size:20px;
+    font-weight:600;line-height:1.2;margin-bottom:6px;
+  }
+  .dec-tit span{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--tinta-3);
+  }
+  .dec-cuerpo{margin:0}
+  .dec-cuerpo p{margin:0 0 10px}
+  .dec-cuerpo p:last-child{margin-bottom:0}
+  .dec-cuerpo em{color:var(--ambar);font-style:normal;font-weight:600}
+
+  /* ---------- tablas ---------- */
+  .tabla-caja{overflow-x:auto;margin:18px 0;border:1px solid var(--linea);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:480px;background:var(--papel-2)}
+  th{
+    text-align:left;font-family:"IBM Plex Mono",monospace;font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-3);
+    padding:11px 14px;border-bottom:1px solid var(--linea);font-weight:600;white-space:nowrap;
+  }
+  td{padding:11px 14px;border-bottom:1px solid var(--linea);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td code{white-space:nowrap}
+  .num{font-variant-numeric:tabular-nums;text-align:right}
+
+  /* ---------- notas ---------- */
+  .nota{
+    background:var(--papel-2);border:1px solid var(--linea);border-radius:8px;
+    padding:15px 18px;margin:20px 0;font-size:14.5px;box-shadow:var(--sombra);
+  }
+  .nota p{margin:0;max-width:none}
+  .nota p + p{margin-top:9px}
+  .nota-tit{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--vino);display:block;margin-bottom:7px;font-weight:600;
+  }
+  .nota.ojo{border-color:var(--queso);background:color-mix(in srgb,var(--queso) 8%,var(--papel-2))}
+  .nota.ojo .nota-tit{color:var(--ambar)}
+
+  ul.lista{padding-left:20px;margin:14px 0;display:grid;gap:7px;max-width:68ch}
+  ul.lista li::marker{color:var(--vino)}
+
+  .pie{
+    max-width:1180px;margin:0 auto;padding:26px 24px 60px;
+    border-top:1px solid var(--linea);color:var(--tinta-3);font-size:13px;
+    font-family:"IBM Plex Mono",monospace;
+  }
+
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  :focus-visible{outline:2px solid var(--vino-2);outline-offset:2px;border-radius:2px}
+</style>
+
+<header class="portada">
+  <div class="portada-caja">
+    <div class="portada-txt">
+      <p class="sello">JM Charcutería · Documentación interna</p>
+      <h1>Manual del Mostrador</h1>
+      <p class="bajada">
+        Cómo se usa la app de caja y turno detrás del mostrador, y por qué el código
+        está hecho como está. La primera parte sirve para trabajar; la segunda, para
+        poder arreglarla dentro de seis meses.
+      </p>
+    </div>
+    <dl class="ficha">
+      <dt>Versión</dt><dd>1.2</dd>
+      <dt>Fecha</dt><dd>18 de septiembre de 2026</dd>
+      <dt>Carpeta</dt><dd>~/proyectos/charcuteria</dd>
+      <dt>Datos</dt><dd>mostrador.v1</dd>
+    </dl>
+  </div>
+</header>
+
+<div class="armazon">
+  <nav class="indice" aria-label="Contenido">
+    <h2>Parte 1 · Uso</h2>
+    <ol>
+      <li><a href="#abrir">Cómo se abre</a></li>
+      <li><a href="#turno">El turno de tres días</a></li>
+      <li><a href="#inventario">Inventario</a></li>
+      <li><a href="#vender">Vender</a></li>
+      <li><a href="#merma">Merma</a></li>
+      <li><a href="#cierre">Cierre</a></li>
+      <li><a href="#respaldos">Respaldos</a></li>
+    </ol>
+    <h2>Parte 2 · Código</h2>
+    <ol>
+      <li><a href="#forma">Forma del proyecto</a></li>
+      <li><a href="#datos">Modelo de datos</a></li>
+      <li><a href="#reglas">Reglas del negocio</a></li>
+      <li><a href="#interfaz">Decisiones de interfaz</a></li>
+      <li><a href="#imagenes">Marca e imágenes</a></li>
+      <li><a href="#limites">Lo que no hace</a></li>
+      <li><a href="#mantener">Mantenerla</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="parte"><span>Parte 1</span><h2>Cómo se usa</h2></div>
+
+    <section id="abrir">
+      <h3>Cómo se abre</h3>
+      <p class="sub">La app no tiene servidor en internet: son archivos que corren en tu propio equipo.</p>
+
+      <pre><code>cd ~/proyectos/charcuteria
+./abrir.sh                 <span class="com"># levanta http://localhost:8080</span></code></pre>
+
+      <p>
+        Eso deja el servidor andando mientras esa terminal esté abierta. <code>Ctrl+C</code> lo apaga.
+        En el navegador entras a <code>http://localhost:8080</code> y ya está.
+      </p>
+
+      <h4>Desde el celular, en el mismo WiFi</h4>
+      <p>
+        Averiguas la IP de la PC con <code>hostname -I</code> y entras desde el teléfono a
+        <code>http://ESA-IP:8080</code>.
+      </p>
+
+      <div class="nota ojo">
+        <span class="nota-tit">Ojo con esto</span>
+        <p>
+          Para el navegador, <code>localhost:8080</code> y <code>10.0.0.5:8080</code> son
+          <strong>dos sitios distintos</strong>, con <strong>datos separados</strong>. Si un día
+          trabajas en la PC y otro en el celular, cada uno lleva su propia contabilidad y no se hablan.
+        </p>
+        <p>
+          Elige <strong>un solo dispositivo</strong> para el mostrador. Para pasar datos de uno a otro
+          se usa el respaldo <code>.json</code>.
+        </p>
+      </div>
+
+      <p>
+        El modo sin conexión (el que deja abrir la app con la PC apagada) solo se activa en
+        <code>localhost</code> o con HTTPS. Entrando por la IP funciona, pero no queda instalada de verdad.
+        Para eso hay que subirla a un hosting con HTTPS.
+      </p>
+    </section>
+
+    <section id="turno">
+      <h3>El turno de tres días</h3>
+      <p class="sub">Un turno se abre una vez y se cierra tres días después. La app cuenta los días sola.</p>
+      <ul class="lista">
+        <li>Arriba dice en qué día del turno vas: <code>día 2 · desde 14-sept</code>.</li>
+        <li>La lista de ventas se separa por día, con el total de cada uno.</li>
+        <li>El cierre y los archivos que exportas llevan fecha de inicio <em>y</em> de fin.</li>
+      </ul>
+      <p>
+        Al abrir un turno que arrastra mercancía del anterior, sale un aviso azul:
+        <strong>pesa lo que quedó antes de empezar a vender</strong>. Desaparece solo cuando anotas
+        una merma, o cuando le das a <em>Ya lo pesé</em>.
+      </p>
+    </section>
+
+    <section id="inventario">
+      <h3>Inventario</h3>
+      <p class="sub">Lo que entró en tu turno, por producto.</p>
+      <p>
+        Cada producto se define una vez: nombre, si se vende <strong>por peso</strong> (libras o kilos)
+        o <strong>por unidad</strong>, y el precio. Después solo se anotan las cantidades.
+      </p>
+      <ul class="lista">
+        <li><strong>+ Producto</strong> — crea uno nuevo y, si hay turno abierto, su entrada inicial.</li>
+        <li><strong>+ Entrada</strong> — mercancía que llega a media mañana. Se suma, no reemplaza.</li>
+        <li><strong>Merma</strong> — lo que se perdió. Tiene su propia sección más abajo.</li>
+        <li><strong>Editar</strong> — cambia nombre o precio. El precio nuevo no toca las ventas ya cobradas.</li>
+      </ul>
+    </section>
+
+    <section id="vender">
+      <h3>Vender</h3>
+      <p class="sub">Una venta es el pedido completo de un cliente, no un producto suelto.</p>
+      <ol class="pasos">
+        <li><b>Tocas el producto</b><p>Se abre con el precio y lo que queda disponible.</p></li>
+        <li><b>Escribes cuánto lleva</b><p>El chip <code>lb</code> ⇄ <code>oz</code> (o <code>kg</code> ⇄ <code>g</code>) cambia la unidad y convierte lo que ya escribiste. Los botones redondos son cantidades frecuentes.</p></li>
+        <li><b>+ Agregar y seguir</b><p>Lo suma al pedido del cliente y vuelves a la lista para el siguiente producto.</p></li>
+        <li><b>Cobrar</b><p>El botón muestra siempre el total corrido de todo el pedido. Para un solo producto vas directo: cantidad → Cobrar.</p></li>
+      </ol>
+      <p>
+        Lo que está apuntado en el pedido <strong>ya se descuenta</strong> de <em>quedan</em>, para que
+        no vendas dos veces lo mismo mientras atiendes. Pero no cuenta como vendido ni entra a la caja
+        hasta que cobras.
+      </p>
+      <p>La <code>×</code> quita una línea del pedido, o borra una venta ya cobrada — el dinero baja solo.</p>
+    </section>
+
+    <section id="merma">
+      <h3>Merma</h3>
+      <p class="sub">El lomo ahumado se descongela, suelta agua y al otro día pesa menos. Eso se anota.</p>
+      <p>En <em>Inventario</em> → <strong>Merma</strong> hay dos formas, y la normal es la primera:</p>
+      <div class="tabla-caja">
+        <table>
+          <thead><tr><th>Modo</th><th>Qué escribes</th><th>Cuándo</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Pesé y quedan</strong></td><td>Lo que marca la pesa</td><td>Siempre que puedas pesar. La app calcula la diferencia sola.</td></tr>
+            <tr><td><strong>Se perdió</strong></td><td>Lo que faltó</td><td>Cuando ya sabes el número exacto (un recorte, algo que se botó).</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Eliges el motivo y la app te dice cuánto dinero en mercancía representa. Si al pesar aparece
+        <strong>más</strong> de lo que decía, también se anota: sale como sobrante, en verde.
+      </p>
+      <div class="nota">
+        <span class="nota-tit">La regla que no se rompe</span>
+        <p>
+          <strong>La merma nunca toca la caja.</strong> Baja la existencia, no el dinero. El monto de
+          arriba solo cambia con ventas cobradas — si no, el día que pierdas 2 lb de lomo parecería
+          que te falta dinero en la gaveta.
+        </p>
+      </div>
+    </section>
+
+    <section id="cierre">
+      <h3>Cierre</h3>
+      <p class="sub">Los mismos seis pasos que están dentro de la app, en la pestaña Cierre.</p>
+      <ol class="pasos">
+        <li><b>Cobra o vacía el pedido</b><p>Si quedó uno a medias, la app no deja cerrar.</p></li>
+        <li><b>Pesa lo que queda y anota la merma</b><p>Así lo que entregas es lo que de verdad hay.</p></li>
+        <li><b>Cuenta el dinero</b><p>Contra el número grande. Si no cuadra, revisa la lista de ventas: todavía estás a tiempo.</p></li>
+        <li><b>Copiar resumen</b><p>Queda un texto listo para mandar por WhatsApp, con el negocio, el rango de fechas, la caja y lo que quedó de cada cosa.</p></li>
+        <li><b>Respaldo completo (.json)</b><p>Y lo guardas fuera del equipo. Es lo único que te salva si se borra el navegador.</p></li>
+        <li><b>Cerrar turno</b><p>Te pregunta si pasas el sobrante como entrada del próximo turno: <strong>Sí</strong> si la mercancía se queda, <strong>No</strong> si mañana empiezas de cero.</p></li>
+      </ol>
+    </section>
+
+    <section id="respaldos">
+      <h3>Respaldos</h3>
+      <p class="sub">Tres cosas que se parecen y no sirven para lo mismo.</p>
+      <div class="tabla-caja">
+        <table>
+          <thead><tr><th>Qué</th><th>Para qué sirve</th><th>¿Restaura?</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Copiar resumen</strong></td><td>Mandar el cierre por WhatsApp</td><td>No</td></tr>
+            <tr><td><strong>Historial (.csv)</strong></td><td>Revisar los turnos en Excel</td><td>No</td></tr>
+            <tr><td><strong>Respaldo (.json)</strong></td><td>El respaldo de verdad: productos, turno abierto, historial y cada venta con su hora</td><td><strong>Sí</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <em>Restaurar respaldo</em> pide un <code>.json</code>, avisa qué trae y reemplaza todo lo que
+        haya. Los archivos salen nombrados <code>jm-historial-2026-09-16.csv</code> y
+        <code>jm-respaldo-2026-09-16.json</code>.
+      </p>
+
+      <h4>Empezar de cero</h4>
+      <p>
+        Al final de la pestaña <em>Cierre</em> está <strong>Borrar todo y empezar de cero</strong>. Deja la
+        app como recién instalada: sin productos, sin turno abierto, sin historial y sin pedido. Sirve,
+        por ejemplo, para enseñársela a alguien sin tus números.
+      </p>
+      <ol class="pasos">
+        <li><b>Descarga el respaldo (.json)</b><p>Si lo que hay te importa. Borrar no tiene vuelta atrás; con ese archivo y <em>Restaurar respaldo</em> vuelves a como estabas.</p></li>
+        <li><b>Toca el botón y lee el aviso</b><p>Dice exactamente lo que se va: <em>"Esto borra TODO: 12 productos, 4 turnos y el turno abierto."</em></p></li>
+        <li><b>Escribe BORRAR</b><p>Da igual si es en minúsculas. Cualquier otra cosa, o <em>Cancelar</em>, no borra nada.</p></li>
+      </ol>
+      <div class="nota ojo">
+        <span class="nota-tit">Ojo con esto</span>
+        <p>
+          Si tienes la app abierta en otra pestaña del mismo navegador, esa también queda en cero: no
+          puede devolverte los datos viejos. Otro navegador u otro celular tienen su propia copia y no se tocan.
+        </p>
+      </div>
+    </section>
+
+    <div class="parte"><span>Parte 2</span><h2>Decisiones de código</h2></div>
+
+    <section id="forma">
+      <h3>Forma del proyecto</h3>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Sin librerías, sin compilar</strong><span>HTML + CSS + JS a secas</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            No hay React, ni <code>npm install</code>, ni paso de compilación. Son tres archivos que el
+            navegador entiende tal cual: <code>index.html</code>, <code>styles.css</code>, <code>app.js</code>.
+          </p>
+          <p>
+            <em>Por qué:</em> con la conexión de Cuba, cualquier dependencia es un riesgo de no poder
+            arreglar la app el día que se rompa. Así se abre el archivo, se cambia una línea y se recarga.
+            Dentro de un año va a seguir funcionando igual.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Todo en el navegador</strong><span>localStorage · clave mostrador.v1</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            No hay servidor, ni base de datos, ni cuenta de usuario. El estado completo vive en una sola
+            clave de <code>localStorage</code> y se guarda entero en cada acción, con
+            <code>guardar()</code>.
+          </p>
+          <p>
+            <em>Por qué:</em> un mostrador no puede depender de que haya internet. Y guardar todo el
+            objeto de golpe, aunque sea "ineficiente", elimina de raíz el error de que una parte se
+            grabe y otra no.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Copia de rescate</strong><span>mostrador.v1.roto</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            Si al arrancar los datos guardados no se pueden leer (corrupción, un JSON a medias),
+            la app <strong>no los sobrescribe en silencio</strong>: aparta la copia cruda bajo la clave
+            <code>mostrador.v1.roto</code>, avisa con un mensaje y arranca vacía.
+          </p>
+          <p>
+            <em>Para recuperarla:</em> en la consola del navegador,
+            <code>localStorage.getItem('mostrador.v1.roto')</code> devuelve el texto tal cual estaba.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Pestañas sincronizadas</strong><span>evento storage</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            Si por accidente quedan dos pestañas abiertas con la app, una venta hecha en una
+            aparece sola en la otra. Y al volver a la pestaña (el celular que estuvo guardado en
+            el bolsillo), la app relee los datos y refresca el día del turno.
+          </p>
+          <p>
+            <em>Por qué:</em> dos pestañas con estados distintos era la forma más fácil de perder
+            una venta: la última en guardar pisaba a la otra.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>PWA con service worker</strong><span>sw.js · manifest.json</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            El <code>sw.js</code> cachea los archivos la primera vez y después sirve desde el caché.
+            Eso es lo que permite instalarla en el celular y abrirla sin conexión.
+          </p>
+          <p>
+            <em>Cuidado:</em> el navegador solo registra un service worker en <code>localhost</code> o
+            bajo HTTPS. Por <code>http://IP:8080</code> la app funciona pero no se instala. Cuando se
+            cambien los archivos hay que subirle el número a <code>CACHE</code> en <code>sw.js</code>,
+            si no el navegador sigue sirviendo los viejos.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="datos">
+      <h3>Modelo de datos</h3>
+      <p class="sub">Todo el estado de la app cabe en esta forma.</p>
+
+      <pre><code>S = {
+  productos: [                 <span class="com">// catálogo, sobrevive a los turnos</span>
+    { id, nombre, tipo: <span class="cad">'peso'</span>|<span class="cad">'unidad'</span>, unidad: <span class="cad">'lb'</span>|<span class="cad">'kg'</span>|null, precio }
+  ],
+  turno: {                     <span class="com">// null si no hay turno abierto</span>
+    id, inicio, avisoPesado,
+    entradas: [ { id, productoId, cantidad, hora } ],
+    ventas:   [ { id, hora, total, lineas: [ { productoId, nombre, unidad, precio, cantidad, importe } ] } ],
+    mermas:   [ { id, productoId, cantidad, motivo, hora } ]   <span class="com">// cantidad negativa = sobró</span>
+  },
+  pedido: [ ... ],             <span class="com">// el pedido del cliente que se está armando</span>
+  historial: [ ... ]           <span class="com">// turnos cerrados, con su detalle congelado</span>
+}</code></pre>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Nada de contadores</strong><span>todo se calcula</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            No existe un campo <code>existencia</code> que alguien actualice. Lo que queda se calcula
+            cada vez a partir de las listas:
+          </p>
+          <pre><code>quedaReal(p) = entradas − vendido − merma
+quedaDe(p)   = quedaReal − lo que está en el pedido sin cobrar</code></pre>
+          <p>
+            <em>Por qué:</em> un contador que se actualiza a mano se desincroniza el día que borras una
+            venta, y entonces la app miente. Calculándolo, borrar una venta corrige el inventario solo.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Migración al cargar</strong><span>función migrar()</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            Al principio una venta era un solo producto. Cuando pasó a tener varias líneas, en vez de
+            romper los datos viejos se agregó <code>migrar()</code>: al leer el almacenamiento convierte
+            el formato antiguo al nuevo y rellena lo que falte (<code>mermas</code>, <code>pedido</code>).
+          </p>
+          <p>
+            <em>Por qué:</em> los respaldos <code>.json</code> viejos siguen sirviendo. Cualquier cambio
+            futuro de estructura debe hacerse ahí mismo.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="reglas">
+      <h3>Reglas del negocio</h3>
+      <p class="sub">Las tres decisiones que definen cómo cuadra la caja.</p>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>La merma no toca el dinero</strong><span>solo existencia</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            <code>totalCaja()</code> suma únicamente las ventas cobradas. La merma entra en el cálculo de
+            lo que queda y se reporta aparte, en mercancía.
+          </p>
+          <p>
+            <em>Por qué:</em> el dinero de la gaveta no cambia porque el lomo pierda peso. Mezclar las dos
+            cosas haría imposible saber si falta plata o si faltó mercancía.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>El pedido reserva, no vende</strong><span>estado intermedio</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            Lo que está en el pedido se descuenta de lo disponible pero no suma a la caja ni cuenta como
+            vendido. Y no se puede cerrar el turno con un pedido a medias.
+          </p>
+          <p>
+            <em>Por qué:</em> atendiendo rápido es fácil apuntar dos veces la misma mercancía. Reservar
+            evita eso, y bloquear el cierre evita que un pedido se pierda sin cobrarse.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Avisa, pero deja pasar</strong><span>vender más de lo que hay</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            Si vendes más de lo que dice el inventario, la app avisa — <em>"Solo quedan 2 lb según el
+            inventario"</em> — y aun así te deja registrar la venta.
+          </p>
+          <p>
+            <em>Por qué:</em> la venta real ya ocurrió; el número mal puesto es el del inventario. Un
+            sistema que te bloquea en medio de atender a un cliente termina usándose a mano en un papel.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="interfaz">
+      <h3>Decisiones de interfaz</h3>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>El número grande, siempre visible</strong><span>barra fija</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            El dinero que debe haber en caja está pegado arriba en todas las pestañas, y hace un pequeño
+            salto cada vez que cambia. El pedido del cliente también queda fijo mientras eliges productos.
+          </p>
+          <p>
+            <em>Detalle técnico:</em> las alturas de esas barras se miden en JavaScript y se escriben en
+            las variables <code>--caja-h</code> y <code>--tabs-h</code>. Adivinarlas en CSS hacía que una
+            barra tapara a la otra cuando cambia el tamaño de letra.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Dos unidades por producto</strong><span>lb ⇄ oz · kg ⇄ g</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            Cada producto tiene una unidad base y se guarda siempre en ella. El chip del modal solo cambia
+            cómo escribes: si pesas en onzas, escribes onzas y se convierte al guardar.
+          </p>
+          <p>
+            <em>Por qué:</em> guardar cantidades en unidades mezcladas es el camino seguro a un error de
+            cuentas que nadie encuentra después.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>CSV pensado para Excel en español</strong><span>; · coma decimal · BOM</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            Separador punto y coma, coma decimal y un BOM al inicio del archivo.
+          </p>
+          <p>
+            <em>Por qué:</em> el Excel en español espera exactamente eso. Con coma como separador parte
+            las columnas mal, y sin el BOM los acentos salen rotos.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>hidden vale más que display</strong><span>una línea de CSS</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            Hay una regla <code>[hidden]{display:none !important}</code> al inicio de la hoja de estilos.
+          </p>
+          <p>
+            <em>Por qué:</em> el atributo <code>hidden</code> lo pisa cualquier <code>display</code> que
+            pongas después. Sin esa línea, un bodegón de "no has vendido nada" se quedaba en pantalla
+            con ventas hechas. Si un elemento no se esconde, mira primero si esa regla sigue ahí.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Borrar todo pide escribir BORRAR</strong><span>prompt · no confirm</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            El botón usa un <code>prompt()</code> en vez de un <code>confirm()</code>: hay que escribir la
+            palabra, y el aviso cuenta cuántos productos y turnos se van. Al confirmar quita tres claves
+            de <code>localStorage</code> — <code>mostrador.v1</code>, la copia de rescate
+            <code>mostrador.v1.roto</code> y <code>mostrador.pasos</code> — y vuelve a
+            <code>vacio()</code>.
+          </p>
+          <p>
+            <em>Por qué:</em> es lo único de la app que no se deshace. Un "Aceptar" se toca sin leer con
+            una mano ocupada; escribir una palabra, no. Se usa <code>removeItem</code> clave por clave y no
+            <code>localStorage.clear()</code> para no llevarse nada que no sea de la app, y porque así el
+            evento <code>storage</code> llega con <code>e.key === KEY</code> y las otras pestañas se releen solas.
+          </p>
+          <p>
+            <em>Detalle:</em> los avisos cuentan en singular o plural — "1 producto, 1 turno" — con el
+            mismo <code>n === 1 ? … : …</code> que el resto de la app. El aviso de
+            <em>Restaurar respaldo</em> hace lo mismo.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="imagenes">
+      <h3>Marca e imágenes</h3>
+      <p class="sub">Todo salió de cuatro fotos del local: el logo impreso y tres murales.</p>
+
+      <p>
+        <code>scripts/preparar-imagenes.py</code> convierte <code>fotos/</code> en <code>assets/</code>.
+        Solo hay que correrlo si cambian las fotos:
+      </p>
+      <pre><code>python3 scripts/preparar-imagenes.py</code></pre>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>El logo, recortado a silueta</strong><span>PNG gris + alfa</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            La marca es de un solo tono, así que se guarda en modo <code>LA</code> (gris + transparencia):
+            pesa 20 KB en vez de 60. Se generan dos versiones, negra y crema, y con ellas los íconos.
+          </p>
+        </div>
+      </div>
+
+      <div class="dec">
+        <p class="dec-tit"><strong>Los murales no se recortaron</strong><span>se nivelaron</span></p>
+        <div class="dec-cuerpo">
+          <p>
+            El primer intento fue separarlos del fondo calculando transparencia. Salió mal: la pared en
+            las fotos es gris y despareja, y al "recuperar" el color la piel del cerdo se iba a rojo y
+            los huevos del bodegón desaparecían.
+          </p>
+          <p>
+            <em>La solución:</em> el pintor pintó opaco, así que el color de la foto ya es el bueno. Se
+            mide el gris de la pared en el borde de cada imagen y se estiran los canales hasta que esa
+            pared queda casi blanca. Los murales se muestran enmarcados, como los cuadros que son.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="limites">
+      <h3>Lo que no hace</h3>
+      <p class="sub">Dicho de frente, porque son las preguntas que va a hacer quien la compre.</p>
+      <ul class="lista">
+        <li><strong>Un solo dispositivo.</strong> No sincroniza. Cada navegador tiene sus datos.</li>
+        <li><strong>Sin respaldo automático.</strong> El <code>.json</code> hay que descargarlo a mano. Es el punto más flojo hoy.</li>
+        <li><strong>Sin usuarios ni clave.</strong> Quien abra el navegador ve y cambia todo.</li>
+        <li><strong>Sin cuadre contra el dinero contado.</strong> La app dice cuánto debe haber; comparar es tuyo.</li>
+        <li><strong>Sin impresión de tickets, ni código de barras, ni impuestos.</strong></li>
+      </ul>
+      <p>
+        Nada de esto es un olvido: se dejó fuera para que la app se pueda usar con una mano mientras
+        atiendes. Lo primero que valdría la pena resolver es el respaldo automático.
+      </p>
+    </section>
+
+    <section id="mantener">
+      <h3>Mantenerla</h3>
+      <div class="tabla-caja">
+        <table>
+          <thead><tr><th>Archivo</th><th>Qué contiene</th><th class="num">Líneas</th></tr></thead>
+          <tbody>
+            <tr><td><code>index.html</code></td><td>Las tres pantallas y los cuatro diálogos</td><td class="num">316</td></tr>
+            <tr><td><code>app.js</code></td><td>Estado, cálculos, render y exportación</td><td class="num">1100</td></tr>
+            <tr><td><code>styles.css</code></td><td>Estilos, tema claro y oscuro</td><td class="num">324</td></tr>
+            <tr><td><code>sw.js</code> · <code>manifest.json</code></td><td>Modo sin conexión e instalación</td><td class="num">—</td></tr>
+            <tr><td><code>assets/</code></td><td>Logo, íconos y murales listos</td><td class="num">—</td></tr>
+            <tr><td><code>fotos/</code></td><td>Las fotos originales del local</td><td class="num">—</td></tr>
+            <tr><td><code>scripts/preparar-imagenes.py</code></td><td>Convierte <code>fotos/</code> en <code>assets/</code></td><td class="num">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Cambios frecuentes, dónde se tocan</h4>
+      <div class="tabla-caja">
+        <table>
+          <thead><tr><th>Quiero…</th><th>Dónde</th></tr></thead>
+          <tbody>
+            <tr><td>Cambiar el nombre del negocio</td><td><code>NEGOCIO</code> en <code>app.js</code>, el <code>&lt;title&gt;</code> y <code>manifest.json</code></td></tr>
+            <tr><td>Agregar un motivo de merma</td><td>Arreglo <code>MOTIVOS</code> en <code>app.js</code></td></tr>
+            <tr><td>Cambiar las cantidades rápidas</td><td>Objeto <code>QUICK</code> en <code>app.js</code></td></tr>
+            <tr><td>Cambiar colores</td><td>Las variables al inicio de <code>styles.css</code></td></tr>
+            <tr><td>Que el navegador tome los cambios</td><td>Subir <code>CACHE</code> en <code>sw.js</code> (hoy va por <code>mostrador-v5</code>)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="nota">
+        <span class="nota-tit">Antes de tocar nada</span>
+        <p>
+          Descarga un <code>.json</code> desde la app. Si algo se rompe, <em>Restaurar respaldo</em> te
+          devuelve exactamente al punto anterior — y así puedes probar con confianza.
+        </p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="pie">
+  JM Charcutería · Mostrador 1.2 · revisado el 18 de septiembre de 2026
+</footer>

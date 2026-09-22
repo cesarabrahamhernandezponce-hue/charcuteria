@@ -105,6 +105,7 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 64px}
 .negocio{margin:0 0 4px;font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--vino)}
 .sin-turno h2{font-size:20px;margin-bottom:8px}
 .sin-turno p{color:var(--tinta-2);max-width:34ch;margin:0 auto 22px}
+.sin-turno .sin-turno-sobrante{color:var(--oliva);font-weight:600;font-size:14px}
 
 /* ---------- layout vender ---------- */
 .split{display:grid;gap:26px}

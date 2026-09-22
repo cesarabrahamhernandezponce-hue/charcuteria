@@ -45,7 +45,8 @@ app normal, con ícono, y **funciona sin conexión** desde la segunda vez que la
    Si dejaste un pedido sin cobrar, te avisa y no deja cerrar hasta que lo cobres o lo vacíes.
    La tabla trae una columna de **merma** y el total de lo que se perdió en mercancía.
    *Copiar resumen* lo deja en texto listo para WhatsApp.
-   Al **cerrar turno** te pregunta si quieres pasar el sobrante como entrada del turno siguiente.
+   Al **cerrar turno** te pregunta si quieres pasar el sobrante al turno siguiente. No abre
+   un turno nuevo: lo que quedó espera y entra cuando alguien toca *Abrir turno*, con esa fecha.
 
 6. **Guardar fuera de la app** (al final de *Cierre*):
    - **Historial en tabla (.csv)** — todos los turnos, un renglón por producto, listo para Excel

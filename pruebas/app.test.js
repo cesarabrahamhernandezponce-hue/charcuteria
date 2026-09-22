@@ -94,13 +94,15 @@ test('3. al pasar el sobrante no se abre turno: se carga cuando el siguiente lo 
   assert.equal(app.S.turno, null, 'no debe quedar un turno abierto');
   assert.equal(app.S.historial.length, 1);
   assert.ok(!app.$('#sinTurno').hidden, 'se ve la pantalla de abrir turno');
+  assert.match(app.$('#sinTurnoSobrante').textContent, /2 productos/);
+  assert.match(app.filaInv('Jamón').textContent, /quedó 7 lb/);
 
   const antes = Date.now();
   app.abrirTurno();
   assert.ok(app.S.turno.inicio >= antes, 'el turno empieza cuando se abre');
   assert.equal(app.queda('Jamón'), 7);
   assert.equal(app.queda('Huevos'), 30);
-  assert.deepEqual(app.S.sobrante, []);
+  assert.equal(app.S.sobrante.length, 0);
 });
 
 test('3. si dice que no al sobrante, el turno siguiente empieza en cero', () => {
@@ -109,6 +111,35 @@ test('3. si dice que no al sobrante, el turno siguiente empieza en cero', () => 
   app.tocar('#btnCerrarTurno');
   app.abrirTurno();
   assert.equal(app.queda('Jamón'), 0);
+});
+
+test('3. el sobrante pasa por el respaldo: el compañero restaura y al abrir tiene la mercancía', () => {
+  const yo = turnoConProductos();
+  yo.vender('Jamón', 3);
+  yo.contestar(true, true);
+  yo.tocar('#btnCerrarTurno');
+  const archivo = { app: 'mostrador', version: 1, datos: yo.guardado() };
+
+  const companero = abrirApp();
+  const w = companero.w;
+  const input = companero.$('#inputImportar');
+  const file = new w.File([JSON.stringify(archivo)], 'respaldo.json', { type: 'application/json' });
+  file.text = async () => JSON.stringify(archivo);   // jsdom no trae Blob.text()
+  Object.defineProperty(input, 'files', { value: [file] });
+  input.dispatchEvent(new w.Event('change'));
+  return new Promise((ok) => setTimeout(ok, 50)).then(() => {
+    assert.equal(companero.S.historial.length, 1);
+    companero.abrirTurno();
+    assert.equal(companero.queda('Jamón'), 7);
+  });
+});
+
+test('3. no deja cambiar la unidad de un producto con sobrante pendiente', () => {
+  const app = turnoConProductos();
+  app.contestar(true, true);
+  app.tocar('#btnCerrarTurno');
+  app.tocar(app.filaInv('Jamón').querySelector('[data-edit]'));
+  assert.ok(!app.$('#prodUnidadNota').hidden);
 });
 
 test('3. datos viejos con el sobrante ya abierto como turno siguen funcionando', () => {

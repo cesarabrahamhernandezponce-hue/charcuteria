@@ -5,7 +5,8 @@ const KEY = 'mostrador.v1';
 const NEGOCIO = 'JM';
 
 /* ---------------- estado ---------------- */
-const vacio = () => ({ productos: [], turno: null, historial: [], pedido: [] });
+/* sobrante: lo que quedó al cerrar el último turno, esperando a que se abra el siguiente */
+const vacio = () => ({ productos: [], turno: null, historial: [], pedido: [], sobrante: [] });
 
 /* Antes cada venta era un solo producto. Ahora una venta puede llevar varias líneas
    (10 huevos + 3.2 lb de jamón). Esto convierte lo viejo al formato nuevo. */
@@ -33,6 +34,7 @@ function migrar(d) {
   }
   if (d.turno && !Array.isArray(d.turno.mermas)) d.turno.mermas = [];
   if (!Array.isArray(d.pedido)) d.pedido = [];
+  if (!Array.isArray(d.sobrante)) d.sobrante = [];
   return d;
 }
 
@@ -163,6 +165,7 @@ function movimientosDe(pid) {
     ventas: t ? lineasDe(t.ventas, pid).length : 0,
     mermas: t ? t.mermas.filter((m) => m.productoId === pid).length : 0,
     pedido: S.pedido.filter((l) => l.productoId === pid).length,
+    sobrante: S.sobrante.filter((x) => x.productoId === pid).length,
   };
 }
 const unidadFija = (pid) => Object.values(movimientosDe(pid)).some((n) => n > 0);
@@ -208,7 +211,14 @@ function renderVenta() {
   const hay = !!S.turno;
   $('#sinTurno').hidden = hay;
   $('#turnoActivo').hidden = !hay;
-  if (!hay) return;
+  const nSob = S.sobrante.filter((x) => prodPorId(x.productoId)).length;
+  $('#sinTurnoSobrante').hidden = hay || !nSob;
+  if (!hay) {
+    $('#sinTurnoSobrante').textContent =
+      `Quedó mercancía del turno anterior (${nSob} ${nSob === 1 ? 'producto' : 'productos'}). ` +
+      'Se carga sola al abrir; la ves en Inventario.';
+    return;
+  }
 
   const grid = $('#gridVenta');
   grid.innerHTML = '';
@@ -316,12 +326,14 @@ function renderInventario() {
     const ent = entradaDe(p.id);
     const q = quedaDe(p.id);
     const mer = mermaDe(p.id);
+    const sob = S.sobrante.filter((x) => x.productoId === p.id).reduce((a, x) => a + x.cantidad, 0);
     const detalleMerma = mer > 0 ? ` · merma ${cant(mer, p)}`
       : mer < 0 ? ` · sobró ${cant(-mer, p)}` : '';
     const li = document.createElement('li');
     li.innerHTML =
       `<div class="iv-main"><div class="iv-nom"></div>` +
       `<div class="iv-sub">${precioLabel(p)}${S.turno ? ' · entró ' + cant(ent, p) : ''}` +
+      (!S.turno && sob ? ` · quedó ${cant(sob, p)}` : '') +
       `<span class="sub-merma">${detalleMerma}</span></div></div>` +
       (S.turno
         ? `<div class="iv-num"><b class="${q < 0 ? 'negativo' : ''}">${cant(q, p)}</b><small>quedan</small></div>`
@@ -399,11 +411,19 @@ function renderCierre() {
 }
 
 /* ---------------- turno ---------------- */
+/* El turno empieza cuando alguien lo abre, no cuando el anterior cerró: en el 3x3 pasan
+   días entre uno y otro. Lo que quedó del anterior entra aquí, con la hora de apertura. */
 $('#btnAbrirTurno').onclick = () => {
-  S.turno = { id: id(), inicio: Date.now(), entradas: [], ventas: [], mermas: [] };
+  const ahora = Date.now();
+  S.turno = { id: id(), inicio: ahora, entradas: [], ventas: [], mermas: [] };
+  const pendiente = S.sobrante.filter((x) => prodPorId(x.productoId));
+  for (const x of pendiente) {
+    S.turno.entradas.push({ id: id(), productoId: x.productoId, cantidad: x.cantidad, hora: ahora, origen: 'sobrante' });
+  }
+  S.sobrante = [];
   guardar();
   render();
-  toast('Turno abierto');
+  toast(pendiente.length ? 'Turno abierto con lo que quedó del anterior' : 'Turno abierto');
 };
 
 $('#btnCerrarTurno').onclick = () => {
@@ -448,14 +468,12 @@ $('#btnCerrarTurno').onclick = () => {
     .filter((x) => x.q > 0);
 
   S.turno = null;
+  S.sobrante = [];
   guardar();
 
-  if (sobrante.length && confirm('¿Pasar lo que quedó como entrada del próximo turno?')) {
-    S.turno = { id: id(), inicio: Date.now(), entradas: [], ventas: [], mermas: [] };
-    for (const x of sobrante) {
-      S.turno.entradas.push({ id: id(), productoId: x.p.id, cantidad: x.q, hora: Date.now() });
-    }
-    toast('Turno nuevo con el sobrante');
+  if (sobrante.length && confirm('¿Pasar lo que quedó al próximo turno?\n\nSe carga cuando se abra el turno siguiente.')) {
+    S.sobrante = sobrante.map((x) => ({ productoId: x.p.id, cantidad: x.q }));
+    toast('Turno cerrado · lo que quedó pasa al próximo');
   } else {
     toast('Turno cerrado');
   }
@@ -770,6 +788,7 @@ $('#btnBorrarProd').onclick = () => {
     : `¿Borrar "${pEdit.nombre}"?`;
   if (!confirm(msg)) return;
   S.productos = S.productos.filter((p) => p.id !== pEdit.id);
+  S.sobrante = S.sobrante.filter((x) => x.productoId !== pEdit.id);
   if (S.turno) {
     S.turno.entradas = S.turno.entradas.filter((e) => e.productoId !== pEdit.id);
     S.turno.mermas = S.turno.mermas.filter((m) => m.productoId !== pEdit.id);

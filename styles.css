@@ -147,7 +147,8 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 64px}
 .pedido-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
 .pedido-head h2{font-size:15px;text-transform:uppercase;letter-spacing:.07em;color:var(--ambar)}
 .btn-link{background:none;border:0;color:var(--tinta-2);cursor:pointer;font-size:13px;font-weight:600;text-decoration:underline;padding:4px}
-.ticket-pedido{max-height:34vh;overflow-y:auto;border-color:var(--linea)}
+/* .ticket.ticket-pedido: la regla general .ticket (más abajo) pone overflow:hidden y le quitaba el scroll */
+.ticket.ticket-pedido{max-height:34vh;overflow-y:auto;overscroll-behavior:contain;border-color:var(--linea)}
 .btn-cobrar{width:100%;margin-top:10px;padding:15px;font-size:18px}
 
 /* ---------- ticket ---------- */

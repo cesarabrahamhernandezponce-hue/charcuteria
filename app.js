@@ -1098,3 +1098,9 @@ render();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+/* Sin laptop, el teléfono es el único lugar donde viven los datos:
+   pedimos que el navegador no los borre cuando le falte espacio. */
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
+}

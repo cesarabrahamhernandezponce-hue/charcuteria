@@ -1,5 +1,5 @@
 /* Cache-first: una vez abierta, la app funciona sin conexión. */
-const CACHE = 'mostrador-v5';
+const CACHE = 'mostrador-v6';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './manifest.json',
   './assets/logo.png', './assets/logo-crema.png',

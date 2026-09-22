@@ -77,6 +77,7 @@ guardar(ancho(plano(logo, CREMA), 420), 'logo-crema.png')
 marca = plano(logo, CREMA)
 for tam, pad, nombre in ((192, 0.14, 'icon-192.png'),
                          (512, 0.14, 'icon-512.png'),
+                         (180, 0.14, 'apple-touch-icon.png'),  # iPhone
                          (512, 0.26, 'icon-maskable.png')):
     fondo = Image.new('RGBA', (tam, tam), NEGRO + (255,))
     util = round(tam * (1 - pad * 2))

@@ -1,9 +1,9 @@
 /* Cache-first: una vez abierta, la app funciona sin conexión. */
-const CACHE = 'mostrador-v6';
+const CACHE = 'mostrador-v7';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './manifest.json',
   './assets/logo.png', './assets/logo-crema.png',
-  './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable.png',
+  './assets/icon-192.png', './assets/apple-touch-icon.png', './assets/icon-512.png', './assets/icon-maskable.png',
   './assets/cerdo.jpg', './assets/bodegon-1.jpg', './assets/bodegon-2.jpg',
   './docs/manual.html'
 ];

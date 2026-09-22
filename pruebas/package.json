@@ -1,0 +1,11 @@
+{
+  "name": "pruebas-mostrador",
+  "private": true,
+  "description": "Pruebas de la app: la cargan en un navegador simulado (jsdom) y la usan como el vendedor.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3"
+  }
+}

@@ -63,6 +63,8 @@ test('2. no deja cambiar lb → kg si el producto ya tiene movimientos en el tur
   const app = turnoConProductos();
   app.vender('Jamón', 2);
   app.tocar(app.filaInv('Jamón').querySelector('[data-edit]'));
+  assert.ok(!app.$('#prodUnidadNota').hidden, 'explica por qué no se puede');
+  assert.ok(app.$('#prodUnidad [data-unidad="kg"]').disabled);
   app.tocar('#prodUnidad [data-unidad="kg"]');
   app.tocar('#prodTipo [data-tipo="unidad"]');
   app.enviar('#formProducto');
@@ -77,6 +79,7 @@ test('2. un producto sin movimientos sí puede cambiar de unidad', () => {
   app.abrirTurno();
   app.nuevoProducto({ nombre: 'Queso', precio: 6, tipo: 'peso', unidad: 'lb' });
   app.tocar(app.filaInv('Queso').querySelector('[data-edit]'));
+  assert.ok(app.$('#prodUnidadNota').hidden);
   app.tocar('#prodUnidad [data-unidad="kg"]');
   app.enviar('#formProducto');
   assert.equal(app.producto('Queso').unidad, 'kg');

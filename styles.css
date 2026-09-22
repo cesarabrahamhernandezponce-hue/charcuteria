@@ -262,6 +262,9 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 64px}
   width:100%;padding:13px 14px;border:1px solid var(--linea);border-radius:11px;
   background:var(--papel);font-size:17px;font-variant-numeric:tabular-nums;
 }
+.nota-campo{margin:-4px 0 14px;font-size:13px;line-height:1.45;color:var(--ambar)}
+.segmented button:disabled{cursor:not-allowed;opacity:.55}
+.segmented button.is-on:disabled{opacity:.8}
 .campo input:focus{outline:2px solid var(--vino-claro);outline-offset:1px}
 .input-unidad{display:flex;gap:8px}
 .chip-unidad{

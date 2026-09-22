@@ -153,6 +153,20 @@ const mermaTotal = () =>
    pero tampoco está disponible: se descuenta para no vender dos veces lo mismo. */
 const enPedidoDe = (pid) => S.pedido.filter((l) => l.productoId === pid).reduce((a, l) => a + l.cantidad, 0);
 
+/* Lo que un producto ya tiene apuntado en el turno. Las cantidades se guardan sin unidad
+   (10 = 10 de la unidad del producto): con movimientos, cambiarle la unidad o borrarlo
+   descuadra el inventario y el cierre. */
+function movimientosDe(pid) {
+  const t = S.turno;
+  return {
+    entradas: t ? t.entradas.filter((e) => e.productoId === pid).length : 0,
+    ventas: t ? lineasDe(t.ventas, pid).length : 0,
+    mermas: t ? t.mermas.filter((m) => m.productoId === pid).length : 0,
+    pedido: S.pedido.filter((l) => l.productoId === pid).length,
+  };
+}
+const unidadFija = (pid) => Object.values(movimientosDe(pid)).some((n) => n > 0);
+
 const quedaDe = (pid) => quedaReal(pid) - enPedidoDe(pid);
 const quedaReal = (pid) => entradaDe(pid) - vendidoDe(pid) - mermaDe(pid);
 const totalCaja = () => (S.turno ? S.turno.ventas.reduce((a, v) => a + v.total, 0) : 0);
@@ -669,6 +683,7 @@ const dlgProd = $('#dlgProducto');
 let pEdit = null;
 let pTipo = 'peso';
 let pUnidad = 'lb';
+let pUnidadFija = false; // el producto ya tiene movimientos: no se le cambia la unidad
 
 function pintarProdLabels() {
   $('#prodUnidadWrap').hidden = pTipo !== 'peso';
@@ -678,19 +693,22 @@ function pintarProdLabels() {
   $('#prodEntradaLabel').textContent = `Entró en el turno (${u})`;
   for (const b of $('#prodTipo').children) b.classList.toggle('is-on', b.dataset.tipo === pTipo);
   for (const b of $('#prodUnidad').children) b.classList.toggle('is-on', b.dataset.unidad === pUnidad);
+  for (const b of [...$('#prodTipo').children, ...$('#prodUnidad').children]) b.disabled = pUnidadFija;
+  $('#prodUnidadNota').hidden = !pUnidadFija;
 }
 
 for (const b of $('#prodTipo').children) {
-  b.onclick = () => { pTipo = b.dataset.tipo; pintarProdLabels(); };
+  b.onclick = () => { if (!pUnidadFija) { pTipo = b.dataset.tipo; pintarProdLabels(); } };
 }
 for (const b of $('#prodUnidad').children) {
-  b.onclick = () => { pUnidad = b.dataset.unidad; pintarProdLabels(); };
+  b.onclick = () => { if (!pUnidadFija) { pUnidad = b.dataset.unidad; pintarProdLabels(); } };
 }
 
 function abrirProducto(p) {
   pEdit = p || null;
   pTipo = p ? p.tipo : 'peso';
   pUnidad = p && p.unidad ? p.unidad : 'lb';
+  pUnidadFija = !!p && unidadFija(p.id);
   $('#prodTitulo').textContent = p ? 'Editar producto' : 'Nuevo producto';
   $('#prodNombre').value = p ? p.nombre : '';
   $('#prodPrecio').value = p ? p.precio : '';
@@ -717,6 +735,8 @@ $('#formProducto').addEventListener('submit', (e) => {
     return;
   }
   if (pEdit) {
+    // si le entraron movimientos mientras el modal estaba abierto, la unidad se queda como está
+    if (unidadFija(pEdit.id)) { pTipo = pEdit.tipo; pUnidad = pEdit.unidad; }
     Object.assign(pEdit, { nombre, precio, tipo: pTipo, unidad: pTipo === 'peso' ? pUnidad : null });
     /* La línea del pedido todavía no se cobró: se le aplica el precio y nombre nuevos.
        Si no, el mismo producto tendría dos precios dentro de un pedido. */

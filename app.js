@@ -1098,7 +1098,7 @@ $('#btnCsv').onclick = () => {
   toast('CSV descargado');
 };
 
-$('#btnJson').onclick = () => {
+function textoRespaldo() {
   const respaldo = {
     app: 'mostrador',
     negocio: NEGOCIO,
@@ -1106,12 +1106,33 @@ $('#btnJson').onclick = () => {
     exportado: new Date().toISOString(),
     datos: S,
   };
-  descargar(
-    `${NEGOCIO.toLowerCase()}-respaldo-${selloFecha(Date.now())}.json`,
-    JSON.stringify(respaldo, null, 2),
-    'application/json'
-  );
+  return JSON.stringify(respaldo, null, 2);
+}
+
+const nombreRespaldo = (ext) => `${NEGOCIO.toLowerCase()}-respaldo-${selloFecha(Date.now())}.${ext}`;
+
+$('#btnJson').onclick = () => {
+  descargar(nombreRespaldo('json'), textoRespaldo(), 'application/json');
   toast('Respaldo descargado');
+};
+
+/* Traspaso 3x3: abre el menú de compartir del teléfono (WhatsApp) con el respaldo.
+   Chrome en Android no deja compartir .json, pero sí .txt: va el mismo contenido
+   y Restaurar acepta los dos. Si el teléfono no sabe compartir, se descarga. */
+$('#btnEnviar').onclick = async () => {
+  const texto = textoRespaldo();
+  const file = new File([texto], nombreRespaldo('txt'), { type: 'text/plain' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'Respaldo ' + NEGOCIO });
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return;   // cerró el menú sin elegir a quién
+      console.warn(err);
+    }
+  }
+  descargar(nombreRespaldo('json'), texto, 'application/json');
+  toast('No se pudo compartir: se descargó, mándalo desde Descargas');
 };
 
 $('#btnImportar').onclick = () => $('#inputImportar').click();

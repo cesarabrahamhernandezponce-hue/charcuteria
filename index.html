@@ -132,8 +132,8 @@
         <li><b>Cuenta el dinero</b> contra el número de abajo. Si no cuadra, revisa la lista de
             ventas en <i>Vender</i> — la <b>×</b> borra una venta mal puesta.</li>
         <li><b>Copiar resumen</b> y lo mandas por WhatsApp.</li>
-        <li><b>Respaldo completo (.json)</b> y guarda ese archivo fuera del equipo
-            (correo, tu propio WhatsApp, una memoria). Es lo único que te salva si se borra el navegador.</li>
+        <li><b>Enviar respaldo</b> por WhatsApp a tu compañero del próximo turno (y a ti mismo).
+            Es lo único que te salva si se borra el navegador.</li>
         <li><b>Cerrar turno</b>. Te pregunta si pasas lo que quedó como entrada del próximo turno:
             <b>Sí</b> si la mercancía se queda para mañana, <b>No</b> si mañana empiezas de cero.</li>
       </ol>
@@ -174,15 +174,16 @@
     <div class="datos">
       <p class="datos-txt" id="datosResumen"></p>
       <div class="datos-acciones">
+        <button class="btn btn-oscuro" id="btnEnviar">Enviar respaldo (WhatsApp)</button>
         <button class="btn" id="btnCsv">Historial en tabla (.csv)</button>
         <button class="btn" id="btnJson">Respaldo completo (.json)</button>
         <button class="btn" id="btnImportar">Restaurar respaldo</button>
       </div>
       <p class="datos-nota">
         El <b>.csv</b> se abre en Excel para revisar los turnos.
-        El <b>.json</b> es el respaldo de verdad: guárdalo y con <b>Restaurar</b> vuelve todo como estaba.
+        El respaldo (<b>Enviar</b> o <b>.json</b>) es el de verdad: guárdalo y con <b>Restaurar</b> vuelve todo como estaba.
       </p>
-      <input type="file" id="inputImportar" accept=".json,application/json" hidden>
+      <input type="file" id="inputImportar" accept=".json,.txt,application/json,text/plain" hidden>
       <button class="btn-link btn-link-peligro" id="btnBorrarTodo">Borrar todo y empezar de cero</button>
     </div>
   </section>

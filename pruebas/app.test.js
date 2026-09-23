@@ -232,3 +232,98 @@ test('5. un producto recién creado por error (solo con entrada) sí se borra', 
   assert.equal(app.producto('Jamon repetido'), undefined);
   assert.equal(app.S.turno.entradas.filter((e) => e.cantidad === 5).length, 0);
 });
+
+/* ---- Enviar respaldo (traspaso 3x3) ---- */
+
+/* Lee el contenido de un File de jsdom (no trae Blob.text()) */
+function leer(w, file) {
+  return new Promise((ok) => {
+    const r = new w.FileReader();
+    r.onload = () => ok(r.result);
+    r.readAsText(file);
+  });
+}
+
+/* Simula el menú de compartir del teléfono. respuesta: 'ok' o el nombre del error. */
+function conCompartir(app, respuesta = 'ok') {
+  const enviados = [];
+  Object.defineProperty(app.w.navigator, 'canShare', { value: () => true, configurable: true });
+  Object.defineProperty(app.w.navigator, 'share', {
+    configurable: true,
+    value: async (datos) => {
+      enviados.push(datos);
+      if (respuesta !== 'ok') throw new app.w.DOMException('x', respuesta);
+    },
+  });
+  return enviados;
+}
+
+/* Cuenta las descargas en vez de hacerlas (jsdom no trae createObjectURL) */
+function contarDescargas(app) {
+  const hechas = [];
+  app.w.URL.createObjectURL = () => 'blob:x';
+  app.w.URL.revokeObjectURL = () => {};
+  app.w.HTMLAnchorElement.prototype.click = function () { hechas.push(this.download); };
+  return hechas;
+}
+
+const esperar = () => new Promise((ok) => setTimeout(ok, 50));
+
+test('enviar respaldo: abre el menú de compartir con un .txt que trae todos los datos', async () => {
+  const yo = turnoConProductos();
+  yo.vender('Jamón', 3);
+  const enviados = conCompartir(yo);
+  yo.tocar('#btnEnviar');
+  await esperar();
+  assert.equal(enviados.length, 1);
+  const [file] = enviados[0].files;
+  assert.match(file.name, /^jm-respaldo-\d{4}-\d{2}-\d{2}\.txt$/);   // Chrome Android no comparte .json
+  assert.equal(file.type, 'text/plain');
+  const archivo = JSON.parse(await leer(yo.w, file));
+  assert.equal(archivo.app, 'mostrador');
+  assert.deepEqual(archivo.datos, yo.guardado());
+});
+
+test('enviar respaldo: el compañero restaura el .txt que le llegó por WhatsApp', async () => {
+  const yo = turnoConProductos();
+  yo.vender('Jamón', 3);
+  yo.contestar(true, true);
+  yo.tocar('#btnCerrarTurno');
+  const enviados = conCompartir(yo);
+  yo.tocar('#btnEnviar');
+  await esperar();
+  const texto = await leer(yo.w, enviados[0].files[0]);
+
+  const companero = abrirApp();
+  const w = companero.w;
+  const input = companero.$('#inputImportar');
+  assert.match(input.accept, /\.txt/);            // si no, el selector de archivos lo esconde
+  const file = new w.File([texto], 'jm-respaldo.txt', { type: 'text/plain' });
+  file.text = async () => texto;
+  Object.defineProperty(input, 'files', { value: [file] });
+  input.dispatchEvent(new w.Event('change'));
+  await esperar();
+  assert.equal(companero.S.historial.length, 1);
+  companero.abrirTurno();
+  assert.equal(companero.queda('Jamón'), 7);
+});
+
+test('enviar respaldo: si cierra el menú sin elegir, no descarga nada ni da error', async () => {
+  const yo = turnoConProductos();
+  conCompartir(yo, 'AbortError');
+  const descargas = contarDescargas(yo);
+  yo.tocar('#btnEnviar');
+  await esperar();
+  assert.equal(descargas.length, 0);
+  assert.doesNotMatch(yo.toast(), /no se pudo|error/i);
+});
+
+test('enviar respaldo: si el teléfono no sabe compartir, lo descarga como siempre', async () => {
+  const yo = turnoConProductos();
+  const descargas = contarDescargas(yo);   // jsdom no trae navigator.share
+  yo.tocar('#btnEnviar');
+  await esperar();
+  assert.equal(descargas.length, 1);
+  assert.match(descargas[0], /^jm-respaldo-.*\.json$/);
+  assert.match(yo.toast(), /descarg/i);
+});

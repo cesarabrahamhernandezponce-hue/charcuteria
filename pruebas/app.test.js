@@ -327,3 +327,63 @@ test('enviar respaldo: si el teléfono no sabe compartir, lo descarga como siemp
   assert.match(descargas[0], /^jm-respaldo-.*\.json$/);
   assert.match(yo.toast(), /descarg/i);
 });
+
+/* ---- Aviso al restaurar un respaldo más viejo (traspaso 3x3) ---- */
+
+/* Mueve al pasado todas las fechas de unos datos (hora, inicio, fin) */
+function envejecer(d, ms) {
+  return JSON.parse(JSON.stringify(d), (k, v) =>
+    ['hora', 'inicio', 'fin'].includes(k) && typeof v === 'number' ? v - ms : v);
+}
+
+function restaurar(app, datos) {
+  const w = app.w;
+  const texto = JSON.stringify({ app: 'mostrador', version: 1, datos });
+  const file = new w.File([texto], 'respaldo.txt', { type: 'text/plain' });
+  file.text = async () => texto;
+  const input = app.$('#inputImportar');
+  Object.defineProperty(input, 'files', { value: [file], configurable: true });
+  input.dispatchEvent(new w.Event('change'));
+  return esperar();
+}
+
+const DIA = 86400000;
+
+test('restaurar un respaldo más viejo que lo del teléfono: avisa, y si dice que no, no toca nada', async () => {
+  const yo = turnoConProductos();
+  const viejo = envejecer(yo.guardado(), 3 * DIA);   // el archivo de hace 3 días
+  yo.vender('Jamón', 3);
+  yo.contestar(false);
+  await restaurar(yo, viejo);
+  assert.match(yo.preguntas.at(-1), /más viejo/i);
+  assert.equal(yo.S.turno.ventas.length, 1);           // la venta de hoy sigue ahí
+});
+
+test('restaurar un respaldo más nuevo (el que manda el compañero): no sale el aviso de viejo', async () => {
+  const companero = turnoConProductos();
+  companero.vender('Jamón', 3);
+  const nuevo = companero.guardado();
+
+  const yo = abrirApp(envejecer(nuevo, 3 * DIA));      // lo que yo tenía de mi turno anterior
+  await restaurar(yo, nuevo);
+  assert.doesNotMatch(yo.preguntas.at(-1), /más viejo/i);
+  assert.equal(yo.S.turno.ventas.length, 1);
+});
+
+test('restaurar en un teléfono vacío: no sale el aviso de viejo', async () => {
+  const otro = turnoConProductos();
+  const yo = abrirApp();
+  await restaurar(yo, envejecer(otro.guardado(), 30 * DIA));
+  assert.doesNotMatch(yo.preguntas.at(-1), /más viejo/i);
+  assert.equal(yo.S.productos.length, 2);
+});
+
+test('un respaldo muy viejo (turno sin lista de mermas) se sigue restaurando', async () => {
+  const otro = turnoConProductos();
+  const viejo = otro.guardado();
+  delete viejo.turno.mermas;
+  const yo = abrirApp();
+  await restaurar(yo, viejo);
+  assert.equal(yo.toast(), 'Respaldo restaurado');
+  assert.equal(yo.S.turno.mermas.length, 0);
+});

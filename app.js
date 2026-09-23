@@ -1137,6 +1137,18 @@ $('#btnEnviar').onclick = async () => {
 
 $('#btnImportar').onclick = () => $('#inputImportar').click();
 
+/* Fecha de lo último que se anotó en unos datos (0 si están vacíos). Sirve para avisar
+   si el respaldo que se va a restaurar es más viejo que lo del teléfono: en el 3x3
+   es fácil elegir el archivo de hace tres días en vez del de hoy. */
+function ultimoMovimiento(d) {
+  const t = d.turno;   // puede venir de un respaldo viejo, sin migrar: sin mermas
+  const fechas = [
+    ...(d.historial || []).map((h) => h.fin),
+    ...(t ? [t.inicio, ...(t.entradas || []), ...(t.ventas || []), ...(t.mermas || [])].map((x) => (typeof x === 'number' ? x : x.hora)) : []),
+  ].filter((n) => typeof n === 'number');
+  return fechas.length ? Math.max(...fechas) : 0;
+}
+
 $('#inputImportar').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -1148,7 +1160,16 @@ $('#inputImportar').addEventListener('change', async (e) => {
       toast('Ese archivo no es un respaldo de Mostrador');
       return;
     }
-    const aviso =
+    const suyo = ultimoMovimiento(datos);
+    const mio = ultimoMovimiento(S);
+    const cuando = (ts) => `${fecha(ts)} ${hora(ts)}`;
+    const viejo = mio && suyo < mio
+      ? '⚠️ ESTE RESPALDO ES MÁS VIEJO que lo que tienes en el teléfono.\n' +
+        `Respaldo: lo último anotado es del ${suyo ? cuando(suyo) : '—'}.\n` +
+        `Teléfono: lo último anotado es del ${cuando(mio)}.\n` +
+        'Si lo restauras, se pierde todo lo anotado después.\n\n'
+      : '';
+    const aviso = viejo +
       `El respaldo trae ${datos.productos.length} ${datos.productos.length === 1 ? 'producto' : 'productos'}` +
       ` y ${datos.historial.length} ${datos.historial.length === 1 ? 'turno' : 'turnos'}` +
       (datos.turno ? ', con un turno abierto' : '') +

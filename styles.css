@@ -304,6 +304,14 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 64px}
   font-size:14px;font-weight:600;z-index:60;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);
   animation:sube .25s ease;
 }
+.aviso-version{
+  position:fixed;left:16px;right:16px;top:12px;z-index:70;max-width:420px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--queso);color:#17150f;padding:8px 8px 8px 16px;border-radius:var(--r);
+  font-size:14px;font-weight:700;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);
+}
+.aviso-version[hidden]{display:none}
+.aviso-version .btn{min-height:44px;background:#17150f;border-color:#17150f;color:#f3efe7}
 @keyframes sube{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 
 @media (prefers-color-scheme: dark){

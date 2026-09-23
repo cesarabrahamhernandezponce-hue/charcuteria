@@ -16,7 +16,8 @@ const abiertas = [];
 const cerrarTodo = () => abiertas.splice(0).forEach((w) => w.close());
 
 /* datos: estado guardado con el que arranca la app (como si ya se hubiera usado) */
-function abrirApp(datos) {
+/* preparar(w): para simular cosas del navegador antes de que arranque la app */
+function abrirApp(datos, preparar) {
   const dom = new JSDOM(HTML, { url: 'http://localhost/', runScripts: 'outside-only', pretendToBeVisual: true });
   const w = dom.window;
   abiertas.push(w);
@@ -38,6 +39,7 @@ function abrirApp(datos) {
 
   if (datos) w.localStorage.setItem(KEY, JSON.stringify(datos));
   /* Como <script> de verdad: sus let/const (S, quedaReal…) quedan visibles para las pruebas */
+  if (preparar) preparar(w);
   const ctx = dom.getInternalVMContext();
   const correr = (codigo) => new vm.Script(codigo).runInContext(ctx);
   correr(APP);

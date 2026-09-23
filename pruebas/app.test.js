@@ -387,3 +387,51 @@ test('un respaldo muy viejo (turno sin lista de mermas) se sigue restaurando', a
   assert.equal(yo.toast(), 'Respaldo restaurado');
   assert.equal(yo.S.turno.mermas.length, 0);
 });
+
+/* ---- Aviso de versión nueva ---- */
+
+/* Simula el service worker. yaHabia: si la app ya estaba instalada (hay uno controlando). */
+function conServiceWorker(yaHabia) {
+  const sw = { actualizaciones: 0 };
+  const preparar = (w) => {
+    const escuchas = {};
+    sw.cambiar = () => (escuchas.controllerchange || []).forEach((f) => f());
+    Object.defineProperty(w.navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        controller: yaHabia ? {} : null,
+        register: async () => ({ update: async () => { sw.actualizaciones++; } }),
+        addEventListener: (tipo, f) => (escuchas[tipo] ||= []).push(f),
+      },
+    });
+  };
+  return { sw, preparar };
+}
+
+test('versión nueva: al instalarse sale el aviso con el botón Actualizar', async () => {
+  const { sw, preparar } = conServiceWorker(true);
+  const app = abrirApp(null, preparar);
+  await esperar();
+  assert.equal(app.$('#avisoVersion').hidden, true);
+  sw.cambiar();
+  assert.equal(app.$('#avisoVersion').hidden, false);
+  assert.ok(app.$('#btnActualizar'));
+});
+
+test('versión nueva: la primera vez que se instala la app no sale el aviso', async () => {
+  const { sw, preparar } = conServiceWorker(false);
+  const app = abrirApp(null, preparar);
+  await esperar();
+  sw.cambiar();
+  assert.equal(app.$('#avisoVersion').hidden, true);
+});
+
+test('versión nueva: al volver de otra app pregunta si hay una', async () => {
+  const { sw, preparar } = conServiceWorker(true);
+  const app = abrirApp(null, preparar);
+  await esperar();
+  const antes = sw.actualizaciones;
+  app.salirYVolver();
+  await esperar();
+  assert.equal(sw.actualizaciones, antes + 1);
+});

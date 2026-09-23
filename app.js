@@ -1270,8 +1270,20 @@ addEventListener('storage', (e) => {
 totalPrevio = totalCaja();
 render();
 
+/* Versión nueva: la app instalada se queda viva días en segundo plano y nunca pregunta
+   si hay una. Se pregunta cada vez que se vuelve a ella, y cuando la nueva ya está
+   descargada se avisa. Recargar no pierde nada: todo, hasta el pedido, está guardado. */
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  const yaHabia = !!navigator.serviceWorker.controller;   // la primera instalación no es "nueva"
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) reg.update().catch(() => {});
+    });
+  }).catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (yaHabia) $('#avisoVersion').hidden = false;
+  });
+  $('#btnActualizar').onclick = () => location.reload();
 }
 
 /* Sin laptop, el teléfono es el único lugar donde viven los datos:

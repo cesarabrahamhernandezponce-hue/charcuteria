@@ -6,7 +6,9 @@ const NEGOCIO = 'JM';
 
 /* ---------------- estado ---------------- */
 /* sobrante: lo que quedó al cerrar el último turno, esperando a que se abra el siguiente */
-const vacio = () => ({ productos: [], turno: null, historial: [], pedido: [], sobrante: [] });
+/* pago: cómo se va a cobrar el pedido que se está armando. monto null = la transferencia es por el total */
+const pagoEfectivo = () => ({ modo: 'efectivo', monto: null });
+const vacio = () => ({ productos: [], turno: null, historial: [], pedido: [], sobrante: [], pago: pagoEfectivo() });
 
 /* Antes cada venta era un solo producto. Ahora una venta puede llevar varias líneas
    (10 huevos + 3.2 lb de jamón). Esto convierte lo viejo al formato nuevo. */
@@ -35,6 +37,9 @@ function migrar(d) {
   if (d.turno && !Array.isArray(d.turno.mermas)) d.turno.mermas = [];
   if (!Array.isArray(d.pedido)) d.pedido = [];
   if (!Array.isArray(d.sobrante)) d.sobrante = [];
+  /* Las ventas sin forma de pago son de antes de que existiera: todas en efectivo.
+     No hace falta tocarlas: sin `transferencia` ni `jefe` cuentan como efectivo. */
+  if (!d.pago || !d.pago.modo) d.pago = pagoEfectivo();
   return d;
 }
 
@@ -133,13 +138,19 @@ function entradaDe(pid) {
 }
 const lineasDe = (ventas, pid) => ventas.flatMap((v) => v.lineas).filter((l) => l.productoId === pid);
 
+/* Lo que se llevó el jefe sin pagar se anota como una venta con `jefe: true`: baja el
+   inventario, pero no es venta (no entra dinero) ni merma (no se perdió). */
+const cobradas = () => (S.turno ? S.turno.ventas.filter((v) => !v.jefe) : []);
+const delJefe = () => (S.turno ? S.turno.ventas.filter((v) => v.jefe) : []);
+
 function vendidoDe(pid) {
-  if (!S.turno) return 0;
-  return lineasDe(S.turno.ventas, pid).reduce((a, l) => a + l.cantidad, 0);
+  return lineasDe(cobradas(), pid).reduce((a, l) => a + l.cantidad, 0);
 }
 function dineroDe(pid) {
-  if (!S.turno) return 0;
-  return lineasDe(S.turno.ventas, pid).reduce((a, l) => a + l.importe, 0);
+  return lineasDe(cobradas(), pid).reduce((a, l) => a + l.importe, 0);
+}
+function jefeDe(pid) {
+  return lineasDe(delJefe(), pid).reduce((a, l) => a + l.cantidad, 0);
 }
 /* Merma: lo que se perdió sin venderse (el lomo que se descongela y suelta peso, un recorte,
    algo que se dañó). No toca el dinero de la caja, solo baja la existencia.
@@ -171,8 +182,15 @@ function movimientosDe(pid) {
 const unidadFija = (pid) => Object.values(movimientosDe(pid)).some((n) => n > 0);
 
 const quedaDe = (pid) => quedaReal(pid) - enPedidoDe(pid);
-const quedaReal = (pid) => entradaDe(pid) - vendidoDe(pid) - mermaDe(pid);
-const totalCaja = () => (S.turno ? S.turno.ventas.reduce((a, v) => a + v.total, 0) : 0);
+const quedaReal = (pid) => entradaDe(pid) - vendidoDe(pid) - jefeDe(pid) - mermaDe(pid);
+
+/* Dinero. Una venta puede pagarse parte por transferencia (tienen límite, así que es
+   común): esa parte es venta pero no está en la caja. En la caja solo hay efectivo. */
+const centavos = (n) => Math.round(n * 100) / 100;
+const totalVendido = () => centavos(cobradas().reduce((a, v) => a + v.total, 0));
+const totalTransfer = () => centavos(cobradas().reduce((a, v) => a + (v.transferencia || 0), 0));
+const totalCaja = () => centavos(totalVendido() - totalTransfer());
+const valorJefe = () => centavos(delJefe().reduce((a, v) => a + v.total, 0));
 const totalPedido = () => S.pedido.reduce((a, l) => a + l.importe, 0);
 
 /* ---------------- render ---------------- */
@@ -195,8 +213,11 @@ function renderCaja() {
     el.classList.add('pulse');
     totalPrevio = t;
   }
-  const n = S.turno ? S.turno.ventas.length : 0;
+  const n = cobradas().length;
   $('#cajaVentas').textContent = n === 1 ? '1 venta' : n + ' ventas';
+  const tr = totalTransfer();
+  $('#cajaTransf').hidden = !tr;
+  $('#cajaTransf').textContent = 'transf. ' + dinero(tr);
   if (S.turno) {
     const d = diaDelTurno(S.turno.inicio, Date.now());
     $('#cajaTurno').textContent = d > 1
@@ -263,21 +284,21 @@ function renderVenta() {
     li.querySelector('.tk-del').onclick = () => quitarLinea(i);
     lp.appendChild(li);
   }
-  $('#btnCobrar').textContent = `Cobrar ${dinero(totalPedido())}`;
+  pintarPago();
 
   /* --- ventas ya cobradas --- */
   const lista = $('#listaVentas');
   lista.innerHTML = '';
   const ventas = [...S.turno.ventas].reverse();
   $('#vacioVentas').hidden = ventas.length > 0;
-  $('#ticketCount').textContent = ventas.length ? dinero(totalCaja()) : '';
+  $('#ticketCount').textContent = ventas.length ? dinero(totalVendido()) : '';
 
   /* En un turno de tres días conviene ver dónde termina un día y empieza el otro,
      con lo que se hizo en cada uno. */
   const porDia = new Map();
   for (const v of S.turno.ventas) {
     const k = new Date(v.hora).toDateString();
-    porDia.set(k, (porDia.get(k) || 0) + v.total);
+    porDia.set(k, (porDia.get(k) || 0) + (v.jefe ? 0 : v.total));
   }
   const variosDias = porDia.size > 1;
   let diaActual = null;
@@ -296,13 +317,16 @@ function renderVenta() {
     const li = document.createElement('li');
     if (!primeraVenta) primeraVenta = li;
     const resumen = v.lineas.map((l) => cantU(l.cantidad, l.unidad) + ' ' + l.nombre).join(' · ');
-    const titulo = v.lineas.length === 1 ? v.lineas[0].nombre : `${v.lineas.length} productos`;
-    const detalle = v.lineas.length === 1
+    const titulo = (v.jefe ? 'Jefe · ' : '') +
+      (v.lineas.length === 1 ? v.lineas[0].nombre : `${v.lineas.length} productos`);
+    const pagoTxt = v.jefe ? ' · sin cobrar'
+      : v.transferencia ? ` · transf. ${dinero(v.transferencia)}` : '';
+    const detalle = (v.lineas.length === 1
       ? `${cantU(v.lineas[0].cantidad, v.lineas[0].unidad)} · ${hora(v.hora)}`
-      : `${resumen} · ${hora(v.hora)}`;
+      : `${resumen} · ${hora(v.hora)}`) + pagoTxt;
     li.innerHTML =
       `<div class="tk-info"><div class="tk-nom"></div><div class="tk-det"></div></div>` +
-      `<span class="tk-imp">${dinero(v.total)}</span>` +
+      `<span class="tk-imp${v.jefe ? ' sin-cobrar' : ''}">${dinero(v.total)}</span>` +
       `<button class="tk-del" title="Borrar esta venta">&times;</button>`;
     li.querySelector('.tk-nom').textContent = titulo;
     li.querySelector('.tk-det').textContent = detalle;
@@ -365,7 +389,16 @@ function renderCierre() {
 
   if (hay) {
     $('#cierreTotal').textContent = dinero(totalCaja());
-    const n = S.turno.ventas.length;
+    const tr = totalTransfer();
+    $('#cierrePagos').hidden = !tr;
+    $('#cierrePagos').textContent =
+      `Transferencias: ${dinero(tr)} · total vendido ${dinero(totalVendido())}`;
+    const jefe = valorJefe();
+    $('#cierreJefe').hidden = !jefe;
+    $('#cierreJefe').textContent = `Se llevó el jefe sin pagar: ${dinero(jefe)} en mercancía`;
+    const hayJefe = delJefe().length > 0;
+    $('#thJefe').hidden = !hayJefe;
+    const n = cobradas().length;
     const pend = S.pedido.length
       ? ` · ojo: hay un pedido sin cobrar por ${dinero(totalPedido())}`
       : '';
@@ -388,6 +421,7 @@ function renderCierre() {
       const tr = document.createElement('tr');
       tr.innerHTML =
         `<td></td><td data-label="Entró">${cant(ent, p)}</td><td data-label="Vendido">${cant(ven, p)}</td>` +
+        (hayJefe ? `<td data-label="Jefe">${jefeDe(p.id) ? cant(jefeDe(p.id), p) : '—'}</td>` : '') +
         `<td data-label="Merma" class="${mer > 0 ? 'negativo' : mer < 0 ? 'positivo' : ''}">` +
         `${mer > 0 ? cant(mer, p) : mer < 0 ? '+' + cant(-mer, p) : '—'}</td>` +
         `<td data-label="Queda" class="${q < 0 ? 'negativo' : ''}">${cant(q, p)}</td>` +
@@ -410,7 +444,8 @@ function renderCierre() {
   for (const h of [...S.historial].reverse().slice(0, 15)) {
     const li = document.createElement('li');
     li.innerHTML =
-      `<span>${fecha(h.inicio)}<small>${rango(h.inicio, h.fin)} · ${h.ventas} ${h.ventas === 1 ? 'venta' : 'ventas'}</small></span>` +
+      `<span>${fecha(h.inicio)}<small>${rango(h.inicio, h.fin)} · ${h.ventas} ${h.ventas === 1 ? 'venta' : 'ventas'}` +
+      `${h.transferencias ? ' · transf. ' + dinero(h.transferencias) : ''}</small></span>` +
       `<b>${dinero(h.total)}</b>`;
     ul.appendChild(li);
   }
@@ -445,13 +480,16 @@ $('#btnCerrarTurno').onclick = () => {
     id: S.turno.id,
     inicio: S.turno.inicio,
     fin: Date.now(),
-    total,
-    ventas: S.turno.ventas.length,
+    total,                          // efectivo en caja (en turnos viejos, todo era efectivo)
+    transferencias: totalTransfer(),
+    jefe: valorJefe(),
+    ventas: cobradas().length,
     detalle: S.productos.map((p) => ({
       nombre: p.nombre,
       unidad: unidadDe(p),
       entro: entradaDe(p.id),
       vendido: vendidoDe(p.id),
+      jefe: jefeDe(p.id),
       merma: mermaDe(p.id),
       queda: quedaReal(p.id),
       dinero: dineroDe(p.id),
@@ -465,6 +503,8 @@ $('#btnCerrarTurno').onclick = () => {
     ventasDetalle: S.turno.ventas.map((v) => ({
       hora: v.hora,
       total: v.total,
+      transferencia: v.transferencia || 0,
+      jefe: !!v.jefe,
       lineas: v.lineas.map((l) => ({ nombre: l.nombre, cantidad: l.cantidad, unidad: l.unidad, importe: l.importe })),
     })),
   });
@@ -491,13 +531,19 @@ $('#btnCerrarTurno').onclick = () => {
 $('#btnCopiar').onclick = async () => {
   const L = [];
   L.push(NEGOCIO + ' · TURNO ' + rango(S.turno.inicio, Date.now()));
-  const nv = S.turno.ventas.length;
-  L.push('Caja: ' + dinero(totalCaja()) + '  ·  ' + nv + (nv === 1 ? ' venta' : ' ventas'));
+  const nv = cobradas().length;
+  L.push('Efectivo en caja: ' + dinero(totalCaja()) + '  ·  ' + nv + (nv === 1 ? ' venta' : ' ventas'));
+  if (totalTransfer()) {
+    L.push('Transferencias: ' + dinero(totalTransfer()) + '  ·  total vendido ' + dinero(totalVendido()));
+  }
+  if (valorJefe()) L.push('Se llevó el jefe sin pagar: ' + dinero(valorJefe()) + ' en mercancía');
   L.push('');
   for (const p of S.productos) {
     const mer = mermaDe(p.id);
+    const jefe = jefeDe(p.id);
     L.push(
       `${p.nombre}: entró ${cant(entradaDe(p.id), p)} | vendido ${cant(vendidoDe(p.id), p)}` +
+      (jefe ? ` | jefe ${cant(jefe, p)}` : '') +
       (mer ? ` | ${mer > 0 ? 'merma' : 'sobró'} ${cant(Math.abs(mer), p)}` : '') +
       ` | queda ${cant(quedaReal(p.id), p)}`
     );
@@ -643,18 +689,79 @@ function agregarLinea(silencioso) {
   return true;
 }
 
+/* ---------------- forma de pago ---------------- */
+/* Lo que llegó por transferencia: si no escribió nada, el total del pedido */
+const montoTransf = () => centavos(S.pago.monto == null ? totalPedido() : S.pago.monto);
+
+function pintarPago() {
+  const modo = S.pago.modo;
+  const total = centavos(totalPedido());
+  for (const b of document.querySelectorAll('#pagoModo button')) {
+    b.classList.toggle('is-on', b.dataset.pago === modo);
+  }
+  const input = $('#pagoTransf');
+  $('#pagoTransfWrap').hidden = modo !== 'transferencia';
+  // no pisar lo que está escribiendo
+  if (modo === 'transferencia' && document.activeElement !== input) input.value = montoTransf().toFixed(2);
+  pintarNotaPago();
+  $('#btnCobrar').textContent = modo === 'jefe'
+    ? `Anotar para el jefe · ${dinero(total)}`
+    : `Cobrar ${dinero(total)}`;
+}
+
+function pintarNotaPago() {
+  const nota = $('#pagoNota');
+  const total = centavos(totalPedido());
+  nota.hidden = S.pago.modo === 'efectivo';
+  if (S.pago.modo === 'jefe') {
+    nota.textContent = 'Se lo lleva sin pagar: baja del inventario, no entra dinero ni cuenta como venta.';
+  } else if (S.pago.modo === 'transferencia') {
+    const t = montoTransf();
+    nota.textContent = t > total
+      ? 'La transferencia pasa del total del pedido.'
+      : `Efectivo a la caja: ${dinero(total - t)}`;
+  }
+}
+
+for (const b of document.querySelectorAll('#pagoModo button')) {
+  b.onclick = () => {
+    S.pago = { modo: b.dataset.pago, monto: null };
+    guardar();
+    pintarPago();
+  };
+}
+$('#pagoTransf').addEventListener('input', (e) => {
+  const t = e.target.value.trim();
+  S.pago.monto = t === '' ? null : num(t);
+  guardar();
+  pintarNotaPago();
+});
+
 function cobrar() {
   if (!S.pedido.length) {
     toast('El pedido está vacío');
     return;
   }
-  const total = Math.round(S.pedido.reduce((a, l) => a + l.importe, 0) * 100) / 100;
-  S.turno.ventas.push({ id: id(), hora: Date.now(), total, lineas: S.pedido });
+  const total = centavos(totalPedido());
+  const venta = { id: id(), hora: Date.now(), total, lineas: S.pedido };
+  let aviso = 'Cobrado ' + dinero(total);
+  if (S.pago.modo === 'transferencia') {
+    const t = montoTransf();
+    if (t <= 0) return toast('Escribe cuánto llegó por transferencia');
+    if (t > total) return toast('La transferencia pasa del total del pedido');
+    venta.transferencia = t;
+    aviso += ` · ${dinero(t)} por transferencia`;
+  } else if (S.pago.modo === 'jefe') {
+    venta.jefe = true;
+    aviso = 'Anotado para el jefe: ' + dinero(total);
+  }
+  S.turno.ventas.push(venta);
   S.pedido = [];
+  S.pago = pagoEfectivo();
   ultimaVenta = true;
   guardar();
   render();
-  toast('Cobrado ' + dinero(total));
+  toast(aviso);
 }
 
 $('#formVenta').addEventListener('submit', (e) => {
@@ -680,6 +787,7 @@ $('#btnVaciarPedido').onclick = () => {
   if (!S.pedido.length) return;
   if (!confirm('¿Vaciar el pedido del cliente?')) return;
   S.pedido = [];
+  S.pago = pagoEfectivo();
   guardar();
   render();
   toast('Pedido vaciado');
@@ -687,6 +795,7 @@ $('#btnVaciarPedido').onclick = () => {
 
 function quitarLinea(i) {
   S.pedido.splice(i, 1);
+  if (!S.pedido.length) S.pago = pagoEfectivo();
   guardar();
   render();
 }
@@ -1041,12 +1150,15 @@ function turnoPlano(t, abierto) {
     inicio: t.inicio,
     fin: Date.now(),
     total: totalCaja(),
-    ventas: t.ventas.length,
+    transferencias: totalTransfer(),
+    jefe: valorJefe(),
+    ventas: cobradas().length,
     detalle: S.productos.map((p) => ({
       nombre: p.nombre,
       unidad: unidadDe(p),
       entro: entradaDe(p.id),
       vendido: vendidoDe(p.id),
+      jefe: jefeDe(p.id),
       merma: mermaDe(p.id),
       queda: quedaReal(p.id),
       dinero: dineroDe(p.id),
@@ -1057,8 +1169,8 @@ function turnoPlano(t, abierto) {
 function construirCsv() {
   const filas = [[
     'Fecha inicio', 'Hora inicio', 'Fecha fin', 'Hora fin', 'Estado',
-    'Ventas del turno', 'Total del turno',
-    'Producto', 'Unidad', 'Entro', 'Vendido', 'Merma', 'Queda', 'Dinero del producto',
+    'Ventas del turno', 'Efectivo en caja', 'Transferencias', 'Total vendido', 'Jefe (valor, sin cobrar)',
+    'Producto', 'Unidad', 'Entro', 'Vendido', 'Jefe', 'Merma', 'Queda', 'Dinero del producto',
   ]];
 
   const turnos = S.historial.map((h) => turnoPlano(h, false));
@@ -1069,17 +1181,18 @@ function construirCsv() {
     const base = [
       selloFecha(t.inicio), hora(t.inicio), selloFecha(t.fin), hora(t.fin),
       abierto ? 'en curso' : 'cerrado',
-      t.ventas, nc(t.total, 2),
+      t.ventas, nc(t.total, 2), nc(t.transferencias || 0, 2),
+      nc(t.total + (t.transferencias || 0), 2), nc(t.jefe || 0, 2),
     ];
     const det = t.detalle || [];
     if (!det.length) {
-      filas.push([...base, '', '', '', '', '', '', '']);
+      filas.push([...base, '', '', '', '', '', '', '', '']);
       continue;
     }
     for (const d of det) {
       filas.push([
         ...base, d.nombre, d.unidad,
-        nq(d.entro), nq(d.vendido), nq(d.merma || 0), nq(d.queda),
+        nq(d.entro), nq(d.vendido), nq(d.jefe || 0), nq(d.merma || 0), nq(d.queda),
         nc(d.dinero || 0, 2),
       ]);
     }

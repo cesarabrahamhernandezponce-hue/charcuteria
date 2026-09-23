@@ -25,6 +25,7 @@
   <div class="caja-meta">
     <span id="cajaVentas">0 ventas</span>
     <span id="cajaTurno">sin turno</span>
+    <span id="cajaTransf" hidden></span>
   </div>
 </header>
 
@@ -69,6 +70,16 @@
           <button class="btn-link" id="btnVaciarPedido">Vaciar</button>
         </div>
         <ul class="ticket ticket-pedido" id="listaPedido"></ul>
+        <div class="segmented pago-modo" id="pagoModo">
+          <button type="button" data-pago="efectivo" class="is-on">Efectivo</button>
+          <button type="button" data-pago="transferencia">Transferencia</button>
+          <button type="button" data-pago="jefe">Jefe</button>
+        </div>
+        <label class="pago-transf" id="pagoTransfWrap" hidden>
+          <span>¿Cuánto llegó por transferencia?</span>
+          <input type="text" inputmode="decimal" id="pagoTransf" autocomplete="off">
+        </label>
+        <p class="pago-nota" id="pagoNota" hidden></p>
         <button class="btn btn-primary btn-cobrar" id="btnCobrar">Cobrar</button>
       </div>
 
@@ -144,6 +155,8 @@
         <span>Dinero que debe haber en caja</span>
         <strong id="cierreTotal">$0.00</strong>
         <small id="cierreInfo"></small>
+        <small id="cierrePagos" hidden></small>
+        <small class="merma-linea" id="cierreJefe" hidden></small>
         <small class="merma-linea" id="cierreMerma" hidden></small>
       </div>
 
@@ -151,7 +164,7 @@
       <div class="tabla-wrap">
         <table class="tabla" id="tablaCierre">
           <thead>
-            <tr><th>Producto</th><th>Entró</th><th>Vendido</th><th>Merma</th><th>Queda</th><th>Dinero</th></tr>
+            <tr><th>Producto</th><th>Entró</th><th>Vendido</th><th id="thJefe" hidden>Jefe</th><th>Merma</th><th>Queda</th><th>Dinero</th></tr>
           </thead>
           <tbody></tbody>
         </table>

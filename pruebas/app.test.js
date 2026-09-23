@@ -435,3 +435,150 @@ test('versión nueva: al volver de otra app pregunta si hay una', async () => {
   await esperar();
   assert.equal(sw.actualizaciones, antes + 1);
 });
+
+/* ---- Forma de pago: efectivo, transferencia (también mixta) y jefe sin cobrar ---- */
+
+/* Apunta al pedido sin cobrar */
+function alPedido(app, nombre, cantidad) {
+  app.tocar(app.tarjeta(nombre));
+  app.escribir('#ventaCantidad', cantidad);
+  app.enviar('#formVenta');
+}
+const pago = (app, modo) => app.tocar(`#pagoModo [data-pago="${modo}"]`);
+const caja = (app) => app.correr('totalCaja()');
+
+test('pago: en efectivo, como siempre, suma a la caja', () => {
+  const app = turnoConProductos();
+  app.vender('Jamón', 2);                              // 2 lb a $4.50 = $9.00
+  assert.equal(caja(app), 9);
+  assert.equal(app.$('#cajaMonto').textContent, '$9.00');
+});
+
+test('pago: todo por transferencia no suma a la caja, pero sí es venta', () => {
+  const app = turnoConProductos();
+  alPedido(app, 'Jamón', 2);                           // $9.00
+  pago(app, 'transferencia');
+  assert.equal(app.$('#pagoTransf').value, '9.00');     // ya viene con el total: un toque
+  app.tocar('#btnCobrar');
+  assert.equal(caja(app), 0);
+  assert.equal(app.correr('totalVendido()'), 9);
+  assert.equal(app.correr('totalTransfer()'), 9);
+  assert.equal(app.S.turno.ventas[0].transferencia, 9);
+  assert.equal(app.queda('Jamón'), 8);
+});
+
+test('pago mixto: 10 huevos + 3.2 lb de jamón = $17.40, $10 por transferencia → $7.40 a la caja', () => {
+  const app = turnoConProductos();
+  alPedido(app, 'Huevos', 10);                         // $3.00
+  alPedido(app, 'Jamón', 3.2);                         // $14.40
+  pago(app, 'transferencia');
+  app.escribir('#pagoTransf', '10');
+  assert.match(app.$('#pagoNota').textContent, /\$7\.40/);   // le dice cuánto va en efectivo
+  app.tocar('#btnCobrar');
+  assert.equal(caja(app), 7.4);
+  assert.equal(app.correr('totalVendido()'), 17.4);
+  assert.equal(app.$('#cajaMonto').textContent, '$7.40');
+});
+
+test('pago: no deja una transferencia mayor que el pedido', () => {
+  const app = turnoConProductos();
+  alPedido(app, 'Jamón', 2);                           // $9.00
+  pago(app, 'transferencia');
+  app.escribir('#pagoTransf', '90');                   // un cero de más
+  app.tocar('#btnCobrar');
+  assert.equal(app.S.turno.ventas.length, 0);
+  assert.equal(app.S.pedido.length, 1);                // el pedido sigue ahí
+  assert.match(app.toast(), /transferencia/i);
+});
+
+test('pago: después de cobrar vuelve a efectivo', () => {
+  const app = turnoConProductos();
+  alPedido(app, 'Jamón', 2);
+  pago(app, 'transferencia');
+  app.tocar('#btnCobrar');
+  app.vender('Jamón', 1);                              // la siguiente, de un toque, en efectivo
+  assert.equal(caja(app), 4.5);
+  assert.equal(app.S.turno.ventas[1].transferencia || 0, 0);
+});
+
+test('jefe: se lleva 2 lb sin pagar: baja el inventario, no es venta, ni merma, ni dinero', () => {
+  const app = turnoConProductos();
+  app.vender('Jamón', 1);                              // $4.50 en efectivo
+  alPedido(app, 'Jamón', 2);
+  pago(app, 'jefe');
+  assert.match(app.$('#btnCobrar').textContent, /jefe/i);
+  app.tocar('#btnCobrar');
+  assert.equal(caja(app), 4.5);
+  assert.equal(app.queda('Jamón'), 7);
+  const pid = JSON.stringify(app.producto('Jamón').id);
+  assert.equal(app.correr(`vendidoDe(${pid})`), 1);
+  assert.equal(app.correr(`jefeDe(${pid})`), 2);
+  assert.equal(app.correr(`mermaDe(${pid})`), 0);
+  assert.equal(app.$('#cajaVentas').textContent, '1 venta');
+});
+
+test('cierre: separa efectivo, transferencias y lo que se llevó el jefe, y lo guarda en el historial', () => {
+  const app = turnoConProductos();
+  app.vender('Jamón', 2);                              // $9.00 efectivo
+  alPedido(app, 'Jamón', 3.2);                         // $14.40
+  pago(app, 'transferencia');
+  app.escribir('#pagoTransf', '10');                   // $4.40 efectivo
+  app.tocar('#btnCobrar');
+  alPedido(app, 'Huevos', 10);                         // $3.00 para el jefe
+  pago(app, 'jefe');
+  app.tocar('#btnCobrar');
+
+  assert.equal(app.$('#cierreTotal').textContent, '$13.40');
+  assert.match(app.$('#cierrePagos').textContent, /\$10\.00/);
+  assert.match(app.$('#cierreJefe').textContent, /\$3\.00/);
+  assert.equal(app.$('#thJefe').hidden, false);
+
+  app.contestar(true, false);
+  app.tocar('#btnCerrarTurno');
+  const h = app.S.historial[0];
+  assert.equal(h.total, 13.4);
+  assert.equal(h.transferencias, 10);
+  assert.equal(h.jefe, 3);
+  assert.equal(h.ventas, 2);
+  assert.equal(h.detalle.find((d) => d.nombre === 'Huevos').jefe, 10);
+});
+
+test('resumen y CSV llevan las transferencias y lo del jefe', () => {
+  const app = turnoConProductos();
+  alPedido(app, 'Jamón', 2);
+  pago(app, 'transferencia');
+  app.escribir('#pagoTransf', '5');
+  app.tocar('#btnCobrar');
+  alPedido(app, 'Huevos', 10);
+  pago(app, 'jefe');
+  app.tocar('#btnCobrar');
+
+  let resumen = '';
+  app.w.prompt = (msg, texto) => { resumen = texto; return ''; };   // jsdom no trae portapapeles
+  app.tocar('#btnCopiar');
+  return esperar().then(() => {
+    assert.match(resumen, /Efectivo en caja: \$4\.00/);
+    assert.match(resumen, /Transferencias: \$5\.00/);
+    assert.match(resumen, /jefe/i);
+
+    const csv = app.correr('construirCsv()');
+    const [cab, ...filas] = csv.replace(/^﻿/, '').split('\r\n').map((f) => f.split(';'));
+    const col = (n) => cab.indexOf(n);
+    assert.ok(col('Efectivo en caja') >= 0 && col('Transferencias') >= 0 && col('Jefe') >= 0);
+    const huevos = filas.find((f) => f[col('Producto')] === 'Huevos');
+    assert.equal(huevos[col('Jefe')], '10');
+    assert.equal(huevos[col('Vendido')], '0');
+    assert.equal(huevos[col('Transferencias')], '5,00');
+  });
+});
+
+test('datos viejos: las ventas de antes cuentan como efectivo', () => {
+  const app = turnoConProductos();
+  app.vender('Jamón', 2);
+  const viejo = app.guardado();
+  for (const v of viejo.turno.ventas) { delete v.transferencia; delete v.jefe; }
+  delete viejo.pago;
+  const otra = abrirApp(viejo);
+  assert.equal(caja(otra), 9);
+  assert.equal(otra.$('#cajaMonto').textContent, '$9.00');
+});

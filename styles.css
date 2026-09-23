@@ -161,6 +161,18 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 64px}
 /* .ticket.ticket-pedido: la regla general .ticket (más abajo) pone overflow:hidden y le quitaba el scroll */
 .ticket.ticket-pedido{max-height:34vh;overflow-y:auto;overscroll-behavior:contain;border-color:var(--linea)}
 .btn-cobrar{width:100%;margin-top:10px;padding:15px;font-size:18px}
+/* forma de pago: efectivo viene marcado, así que cobrar sigue siendo de un toque */
+.pago-modo{margin-top:10px}
+.pago-modo button{padding:9px 4px;font-size:14px}
+.pago-transf{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;font-weight:600;color:var(--tinta-2)}
+.pago-transf span{flex:1}
+.pago-transf input{
+  width:8.5em;padding:10px 12px;border:1px solid var(--linea);border-radius:11px;
+  background:var(--papel);font-size:17px;font-variant-numeric:tabular-nums;text-align:right;
+}
+.pago-transf input:focus{outline:2px solid var(--vino-claro);outline-offset:1px}
+.pago-nota{margin:8px 0 0;font-size:13px;color:var(--tinta-2);font-variant-numeric:tabular-nums}
+.tk-imp.sin-cobrar{color:var(--tinta-2);text-decoration:line-through}
 
 /* ---------- ticket ---------- */
 .ticket{list-style:none;margin:0;padding:0;background:var(--papel-2);border:1px solid var(--linea);border-radius:var(--r);overflow:hidden}
@@ -320,7 +332,6 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 64px}
   background:var(--queso);color:#17150f;padding:8px 8px 8px 16px;border-radius:var(--r);
   font-size:14px;font-weight:700;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);
 }
-.aviso-version[hidden]{display:none}
 .aviso-version .btn{min-height:44px;background:#17150f;border-color:#17150f;color:#f3efe7}
 @keyframes sube{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 

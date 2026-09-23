@@ -31,7 +31,9 @@ body{
 }
 h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
 button{font:inherit;color:inherit}
-input{font:inherit}
+/* los campos no heredan el color: en modo oscuro la letra salía negra sobre fondo oscuro */
+input{font:inherit;color:inherit}
+input::placeholder{color:var(--tinta-2);opacity:.7}
 
 /* ---------- barra de caja ---------- */
 .caja{

@@ -54,6 +54,14 @@ input::placeholder{color:var(--tinta-2);opacity:.7}
 .caja-monto.pulse{animation:pop .35s ease}
 @keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.07)}100%{transform:scale(1)}}
 .caja-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:12px;opacity:.8;text-align:right;white-space:nowrap}
+/* En el teléfono no cabe todo en una fila: el número grande tapaba ventas y turno.
+   Ventas y turno pasan a una línea debajo del número; el logo ocupa las dos filas. */
+@media(max-width:640px){
+  .caja{display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:2px}
+  .marca{grid-row:1 / span 2}
+  .caja-meta{grid-column:2;flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;gap:0 6px;text-align:left}
+  .caja-meta span+span::before{content:"·";margin-right:6px}
+}
 
 /* ---------- tabs ---------- */
 .tabs{

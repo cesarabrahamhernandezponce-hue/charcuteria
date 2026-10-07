@@ -77,7 +77,7 @@ en la pared: negro del logo, vino del jamón, amarillo del queso, azul del overo
 Los murales están enmarcados dentro de la app (el cerdo carnicero recibe al abrir turno, y los
 bodegones acompañan las pantallas vacías).
 
-Las fotos originales viven en `fotos/`. Los recursos que usa la app se generan con:
+Las fotos originales viven en `fotos/` (no se incluyen en el repositorio). Los recursos que usa la app se generan con:
 
 ```bash
 python3 scripts/preparar-imagenes.py      # fotos/ -> assets/

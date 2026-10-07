@@ -11,3 +11,7 @@ __pycache__/
 
 # Pruebas
 node_modules/
+
+# Material privado: se queda en la máquina, no en el repo
+fotos/
+CLAUDE.md
